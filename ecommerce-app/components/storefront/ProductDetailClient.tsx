@@ -228,12 +228,12 @@ export function ProductDetailClient({
                         aria-pressed={isSelected}
                         title={unavailable ? `${opt} — sold out` : opt}
                         aria-label={isColorAttr ? `${opt}${isSelected ? ", selected" : ""}` : undefined}
-                        className={`relative shrink-0 border transition-all ${
+                        className={`relative shrink-0 border transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/35 focus-visible:ring-offset-2 focus-visible:ring-offset-background ${
                           isColorAttr
                             ? `h-8 w-8 rounded-full p-0 sm:h-9 sm:w-9 ${
                                 isSelected
-                                  ? "border-background shadow-sm ring-2 ring-heading ring-offset-2 ring-offset-background"
-                                  : "border-black/20 hover:border-heading/50 hover:ring-2 hover:ring-heading/15"
+                                  ? "scale-[1.04] border-[3px] border-primary shadow-[0_3px_10px_rgba(22,35,59,0.2)]"
+                                  : "border-black/20 shadow-sm hover:scale-[1.04] hover:border-heading/60 hover:shadow-md"
                               }`
                             : `rounded-md px-3 py-1.5 text-sm sm:px-3.5 sm:py-2 ${
                                 isSelected
@@ -279,36 +279,38 @@ export function ProductDetailClient({
           </div>
         ) : (
           <>
-            <div className={`mt-3 flex items-center gap-3 sm:mt-5 md:block ${lowStock ? "justify-between" : "justify-start"}`}>
-              {lowStock && (
-                <p className="text-xs text-warning sm:text-sm">{stockMessage}</p>
-              )}
-              <div className="flex items-center gap-1.5 md:mt-5 md:justify-start md:gap-2">
+            <div className="mt-3 flex flex-nowrap items-center justify-start gap-3 sm:mt-5 sm:gap-4">
+              <div className="flex shrink-0 items-center gap-1.5 sm:gap-2">
                 <span className="text-xs font-medium text-heading sm:text-sm">Qty</span>
                 <div className="flex h-8 items-center rounded-md border border-line sm:h-10 sm:rounded-lg">
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => Math.max(1, q - 1))}
-                  aria-label="Decrease quantity"
-                  className="flex h-8 w-8 items-center justify-center text-base text-heading disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
-                  disabled={quantity <= 1}
-                >
-                  −
-                </button>
-                <span className="min-w-6 text-center font-sans text-xs tabular-nums text-heading sm:min-w-8 sm:text-sm">
-                  {quantity}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
-                  aria-label="Increase quantity"
-                  className="flex h-8 w-8 items-center justify-center text-base text-heading disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
-                  disabled={quantity >= stock}
-                >
-                  +
-                </button>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.max(1, q - 1))}
+                    aria-label="Decrease quantity"
+                    className="flex h-8 w-8 items-center justify-center text-base text-heading disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                    disabled={quantity <= 1}
+                  >
+                    −
+                  </button>
+                  <span className="min-w-6 text-center font-sans text-xs tabular-nums text-heading sm:min-w-8 sm:text-sm">
+                    {quantity}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setQuantity((q) => Math.min(stock, q + 1))}
+                    aria-label="Increase quantity"
+                    className="flex h-8 w-8 items-center justify-center text-base text-heading disabled:opacity-40 sm:h-10 sm:w-10 sm:text-lg"
+                    disabled={quantity >= stock}
+                  >
+                    +
+                  </button>
                 </div>
               </div>
+              {lowStock && (
+                <p className="shrink-0 whitespace-nowrap text-xs text-warning sm:text-sm">
+                  {stockMessage}
+                </p>
+              )}
             </div>
 
             <div className="mt-4 flex flex-row gap-2.5 sm:mt-5 sm:gap-3">

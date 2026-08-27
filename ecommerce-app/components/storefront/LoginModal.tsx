@@ -64,6 +64,11 @@ export function LoginModal({
 
   const valid = MOBILE_RE.test(mobile);
 
+  const openAlternativeSignIn = () => {
+    onClose();
+    router.push(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`);
+  };
+
   // Reset on close, so re-opening never shows a stale code step or error.
   useEffect(() => {
     if (open) return;
@@ -280,9 +285,13 @@ export function LoginModal({
 
               <p className="text-center text-xs text-muted">
                 Prefer email?{" "}
-                <Link href="/login" className="text-link underline underline-offset-2">
+                <button
+                  type="button"
+                  onClick={openAlternativeSignIn}
+                  className="text-link underline underline-offset-2"
+                >
                   Sign in another way
-                </Link>
+                </button>
               </p>
             </form>
           ) : (

@@ -45,7 +45,7 @@ export function AccountNav({ name, email }: { name: string; email: string }) {
   }, "");
 
   return (
-    <aside className="lg:sticky lg:top-24">
+    <aside className="min-w-0 max-w-full overflow-hidden lg:sticky lg:top-24 lg:overflow-visible">
       <div className="mb-4 hidden rounded-xl border border-line bg-surface p-4 lg:block">
         <p className="text-xs uppercase tracking-[0.18em] text-muted">Hello</p>
         <p className="mt-1 truncate font-medium text-heading">{name}</p>
@@ -54,7 +54,7 @@ export function AccountNav({ name, email }: { name: string; email: string }) {
 
       <nav
         aria-label="Account"
-        className="-mx-4 flex gap-1 overflow-x-auto px-4 pb-2 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0"
+        className="-mx-4 flex max-w-[calc(100%+2rem)] gap-1 overflow-x-auto px-4 pb-2 [scrollbar-width:none] lg:mx-0 lg:max-w-none lg:flex-col lg:overflow-visible lg:px-0 lg:pb-0 [&::-webkit-scrollbar]:hidden"
       >
         {LINKS.map(({ href, label, icon: Icon }) => {
           const isActive = active === href;

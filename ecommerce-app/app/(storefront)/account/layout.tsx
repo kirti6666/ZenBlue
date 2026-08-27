@@ -31,7 +31,7 @@ export default async function AccountLayout({ children }: { children: React.Reac
     "there";
 
   return (
-    <div className="mx-auto grid max-w-page gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[220px_1fr] lg:gap-10 lg:py-10">
+    <div className="mx-auto grid w-full min-w-0 max-w-page gap-5 overflow-hidden px-4 py-5 sm:gap-6 sm:px-6 sm:py-7 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 lg:overflow-visible lg:py-10">
       <AccountNav name={name} email={profile?.email ?? current.email} />
       <div className="min-w-0">{children}</div>
     </div>

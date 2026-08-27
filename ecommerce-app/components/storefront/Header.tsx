@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Heart } from "lucide-react";
 import { connectDB } from "@/lib/db";
 import { User as UserModel } from "@/models";
 import { getServerUser } from "@/lib/middleware/getServerUser";
@@ -79,6 +81,14 @@ export async function Header() {
           <div className="hidden xl:block">
             <AccountMenu name={firstName} isStaff={isStaff} isLoggedIn={!!user} />
           </div>
+
+          <Link
+            href={user ? "/account/wishlist" : "/login?callbackUrl=/account/wishlist"}
+            aria-label="My wishlist"
+            className="hidden h-10 w-10 items-center justify-center rounded-full text-heading transition-colors hover:bg-surface-alt hover:text-link sm:flex"
+          >
+            <Heart size={19} strokeWidth={1.6} />
+          </Link>
 
           <CartIcon />
         </div>

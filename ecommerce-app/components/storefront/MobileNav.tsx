@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { usePathname } from "next/navigation";
-import { CircleHelp, Menu, MessageCircle, PackageSearch, Plus, ShoppingBag, UserRound, X } from "lucide-react";
+import { CircleHelp, Heart, Menu, MessageCircle, PackageSearch, Plus, ShoppingBag, UserRound, X } from "lucide-react";
 import type { NavLink } from "@/lib/site-settings";
 
 /**
@@ -161,6 +161,13 @@ export function MobileNav({
               <div className="mt-2 space-y-0.5 bg-surface-alt px-5 py-4">
                 {[
                   { href: isLoggedIn ? accountHref : "/login", label: "My Account", Icon: UserRound },
+                  {
+                    href: isLoggedIn
+                      ? "/account/wishlist"
+                      : "/login?callbackUrl=/account/wishlist",
+                    label: "My Wishlist",
+                    Icon: Heart,
+                  },
                   { href: "/track-order", label: "Track Order", Icon: PackageSearch },
                   { href: "/faq", label: "FAQ", Icon: CircleHelp },
                   { href: "/contact", label: "Contact Us", Icon: MessageCircle },
