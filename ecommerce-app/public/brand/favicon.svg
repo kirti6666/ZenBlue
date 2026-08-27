@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ZEN BLUE">
+  <title>ZEN BLUE</title>
+  <rect width="64" height="64" rx="12" fill="#2B4A75"/>
+  <g stroke="#FFFFFF" fill="none" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M18 16 L46 16 L19 49 L45 49"/>
+    <path d="M26 12 L26 53"/>
+    <path d="M26 16 L48 32 L26 34 L44 49"/>
+  </g>
+</svg>

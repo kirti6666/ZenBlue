@@ -1,0 +1,125 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/**
+ * Fallback palette = ZenBlue direction B (Ivory & Navy) — the selected
+ * direction. These values are only used for the first paint before the
+ * admin-selected palette is injected by app/layout.tsx, and as a safety net if
+ * the settings lookup fails.
+ */
+:root {
+  color-scheme: light;
+  --background: #f6f5f2;      /* Ivory */
+  --surface: #ffffff;
+  --surface-alt: #efeeea;
+  --brand: #16233b;           /* Deep Navy */
+  --primary: #24406b;         /* Navy */
+  --primary-foreground: #ffffff;
+  --link: #24406b;
+  --heading: #16233b;
+  --body: #2b2f35;            /* Charcoal */
+  --muted: #626b76;           /* Slate */
+  --border: #dee2e6;          /* Silver Mist */
+  --accent: #8e99a4;          /* Steel */
+  --accent-pressed: #6f7b87;
+  --success: #2f6b45;
+  --warning: #8a6212;
+  --error: #a03028;
+  --sale: #b4472f;
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Cormorant Garamond", Georgia, serif;
+}
+
+* {
+  border-color: var(--border);
+}
+
+body {
+  color: var(--body);
+  background: var(--background);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  color: var(--heading);
+}
+
+/* Brand wordmark / section titles use the display face. */
+.font-display {
+  font-family: var(--font-display);
+}
+
+/* Letter-spaced small caps used for eyebrow labels across the storefront. */
+.eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.6875rem;
+  color: var(--muted);
+}
+
+@keyframes announcement-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.announcement-track {
+  animation: announcement-marquee 48s linear infinite;
+  will-change: transform;
+}
+
+.announcement-viewport:hover .announcement-track,
+.announcement-viewport:focus-within .announcement-track {
+  animation-play-state: paused;
+}
+
+/* Native form controls should follow the palette rather than the OS default. */
+input, select, textarea {
+  background-color: var(--surface);
+  color: var(--heading);
+  border-color: var(--border);
+}
+input::placeholder, textarea::placeholder {
+  color: var(--muted);
+}
+
+/* Keyboard focus is always visible, on every ground. */
+:focus-visible {
+  outline: 2px solid var(--link);
+  outline-offset: 2px;
+}
+
+::selection {
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+
+/* Scrollbar tuned for the dark directions; harmless on the light ones. */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--background); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 6px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .announcement-viewport {
+    overflow-x: auto;
+  }
+
+  .announcement-track {
+    animation: none !important;
+    transform: none !important;
+  }
+
+  .announcement-set-duplicate {
+    display: none;
+  }
+}

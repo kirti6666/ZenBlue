@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 96" role="img" aria-label="ZEN BLUE">
+  <title>ZEN BLUE</title>
+  <!--
+    Horizontal lockup for LIGHT grounds, matching the supplied mark:
+    an angular ZB monogram, a thin vertical rule, then the wordmark in
+    letter-spaced navy caps. Single flat navy (#2B4570 / Deep Navy family) —
+    no gradients, per the mark as supplied.
+  -->
+  <g stroke="#2B4A75" fill="none" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Monogram: overlapping angular Z and B strokes -->
+    <path d="M28 20 L74 20 L30 74 L72 74"/>
+    <path d="M40 14 L40 82"/>
+    <path d="M40 20 L76 46 L40 50 L70 74"/>
+  </g>
+
+  <!-- Divider rule -->
+  <rect x="100" y="14" width="2.4" height="68" fill="#2B4A75"/>
+
+  <!-- ZEN BLUE wordmark -->
+  <text x="126" y="62"
+        font-family="Helvetica Neue, Helvetica, Arial, sans-serif"
+        font-size="40" font-weight="600" letter-spacing="7" fill="#2B4A75">ZEN BLUE</text>
+</svg>

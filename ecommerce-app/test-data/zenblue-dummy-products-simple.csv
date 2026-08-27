@@ -1,0 +1,7 @@
+sku,title,description,category,price,stock,featured,active
+ZB-DEMO-TEE-001,Demo Cotton T-Shirt,Dummy product for testing the storefront and checkout,T-Shirts,999,25,yes,yes
+ZB-DEMO-SHIRT-001,Demo Formal Shirt,Dummy product for testing product editing and orders,Shirts,1799,18,no,yes
+ZB-DEMO-POLO-001,Demo Pique Polo,Dummy product with low stock for testing inventory alerts,Polos,1399,3,yes,yes
+ZB-DEMO-STREET-001,Demo Oversized Tee,Dummy product for testing featured products and search,Streetwear,1599,12,yes,yes
+ZB-DEMO-COMBO-001,Demo T-Shirt Combo,Dummy product for testing cart totals and coupons,Combo,2499,10,no,yes
+ZB-DEMO-ACC-001,Demo Cotton Cap,Dummy product for testing category filters,Accessories,699,20,no,yes
