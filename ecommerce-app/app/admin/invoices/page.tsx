@@ -137,7 +137,17 @@ interface InvoiceRow {
   isInterState: boolean;
 }
 
-const TABS = ["Seller & GSTIN", "Tax", "Numbering", "Document", "Bank", "Invoice Register"] as const;
+interface CreditNoteRow {
+  _id: string;
+  creditNoteNumber: string;
+  originalInvoiceNumber: string;
+  issuedAt: string;
+  buyerName: string;
+  grandTotal: number;
+  totalTax: number;
+}
+
+const TABS = ["Seller & GSTIN", "Tax", "Numbering", "Document", "Bank", "Invoice Register", "Credit Notes"] as const;
 type Tab = (typeof TABS)[number];
 
 export default function AdminInvoicesPage() {
@@ -152,6 +162,9 @@ export default function AdminInvoicesPage() {
   const [registerTotals, setRegisterTotals] = useState({ grandTotal: 0, totalTax: 0, count: 0 });
   const [registerLoading, setRegisterLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [creditNotes, setCreditNotes] = useState<CreditNoteRow[]>([]);
 
   useEffect(() => {
     fetch("/api/invoice-settings")
@@ -165,6 +178,8 @@ export default function AdminInvoicesPage() {
     try {
       const params = new URLSearchParams({ limit: "50" });
       if (search.trim()) params.set("search", search.trim());
+      if (from) params.set("from", from);
+      if (to) params.set("to", to);
       const res = await fetch(`/api/invoices?${params.toString()}`);
       const data = await res.json();
       setInvoices(data.invoices ?? []);
@@ -176,6 +191,11 @@ export default function AdminInvoicesPage() {
 
   useEffect(() => {
     if (tab === "Invoice Register") loadRegister();
+    if (tab === "Credit Notes") {
+      fetch("/api/credit-notes")
+        .then((res) => res.json())
+        .then((data) => setCreditNotes(data.creditNotes ?? []));
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tab]);
 
@@ -429,7 +449,7 @@ export default function AdminInvoicesPage() {
       {/* ----------------------- REGISTER ----------------------- */}
       {tab === "Invoice Register" && (
         <div className="space-y-4">
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[220px] flex gap-2">
               <input
                 value={search}
@@ -445,6 +465,20 @@ export default function AdminInvoicesPage() {
                 <Search size={14} /> Search
               </button>
             </div>
+            <label className="text-xs text-gray-500">
+              From
+              <input type="date" value={from} onChange={(e) => setFrom(e.target.value)} className="mt-1 block rounded-md border px-3 py-2 text-sm text-gray-900" />
+            </label>
+            <label className="text-xs text-gray-500">
+              To
+              <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="mt-1 block rounded-md border px-3 py-2 text-sm text-gray-900" />
+            </label>
+            <a
+              href={`/api/invoices/bulk?${new URLSearchParams({ ...(from ? { from } : {}), ...(to ? { to } : {}) }).toString()}`}
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm text-white"
+            >
+              <Download size={15} /> Download ZIP
+            </a>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
@@ -530,6 +564,34 @@ export default function AdminInvoicesPage() {
                           </a>
                         </div>
                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "Credit Notes" && (
+        <div className="space-y-4">
+          <p className="text-sm text-gray-500">Issued against completed returns and paid-order cancellations.</p>
+          {creditNotes.length === 0 ? (
+            <p className="text-sm text-gray-400">No credit notes issued yet.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full border text-sm">
+                <thead><tr className="bg-gray-50 text-left"><th className="p-2">Credit note</th><th className="p-2">Original invoice</th><th className="p-2">Customer</th><th className="p-2">Date</th><th className="p-2 text-right">Tax</th><th className="p-2 text-right">Amount</th><th className="p-2"></th></tr></thead>
+                <tbody>
+                  {creditNotes.map((note) => (
+                    <tr key={note._id} className="border-t">
+                      <td className="p-2 font-mono">{note.creditNoteNumber}</td>
+                      <td className="p-2 font-mono text-gray-500">{note.originalInvoiceNumber}</td>
+                      <td className="p-2">{note.buyerName || "—"}</td>
+                      <td className="p-2 text-gray-500">{new Date(note.issuedAt).toLocaleDateString("en-IN")}</td>
+                      <td className="p-2 text-right">{currency}{note.totalTax.toLocaleString("en-IN")}</td>
+                      <td className="p-2 text-right font-medium">{currency}{note.grandTotal.toLocaleString("en-IN")}</td>
+                      <td className="p-2 text-right"><a href={`/api/credit-notes/${note._id}?download=1`} className="text-gray-500 hover:text-gray-800" title="Download"><Download size={16} /></a></td>
                     </tr>
                   ))}
                 </tbody>

@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import Link from "next/link";
 import { Download } from "lucide-react";
 import { connectDB } from "@/lib/db";
-import { Order } from "@/models";
+import { CreditNote, Order } from "@/models";
 import { getServerUser } from "@/lib/middleware/getServerUser";
 import { getSiteSettings } from "@/lib/site-settings";
 import { checkReturnEligibility } from "@/lib/returns";
@@ -43,6 +43,10 @@ export default async function OrderDetailPage({ params }: { params: { id: string
   // Whether a return can be raised, computed with the same rules the API
   // enforces, so the button never appears when the request would be refused.
   const existingReturns = await ReturnRequest.find({ order: params.id }).lean();
+  const creditNotes = await CreditNote.find({ order: params.id })
+    .select("creditNoteNumber issuedAt grandTotal")
+    .sort({ issuedAt: -1 })
+    .lean<any[]>();
   const eligibility = checkReturnEligibility(o, settings, existingReturns);
   const canCancel = ["placed", "confirmed", "processing"].includes(o.orderStatus);
 
@@ -68,6 +72,24 @@ export default async function OrderDetailPage({ params }: { params: { id: string
           <Download size={15} /> Download Invoice
         </a>
       </div>
+
+      {creditNotes.length > 0 && (
+        <div className="mb-6 rounded-md border p-4">
+          <h2 className="mb-3 text-sm font-medium">Credit notes</h2>
+          <div className="space-y-2">
+            {creditNotes.map((note) => (
+              <a
+                key={String(note._id)}
+                href={`/api/credit-notes/${String(note._id)}?download=1`}
+                className="flex items-center justify-between rounded-md bg-gray-50 px-3 py-2 text-sm hover:bg-gray-100"
+              >
+                <span>{note.creditNoteNumber}</span>
+                <span className="inline-flex items-center gap-1 text-link"><Download size={14} /> Download</span>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
 
       {o.awb && (
         <div className="mb-6 rounded-md border p-4 text-sm">

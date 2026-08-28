@@ -49,30 +49,31 @@ export async function sendOrderEmailWithInvoice({
   subject,
   html,
 }: SendOrderEmailParams): Promise<void> {
-  const transport = getTransport();
-
-  if (!transport) {
-    console.warn(`[email] SMTP not configured — skipping "${subject}" to ${to}`);
-    return;
-  }
-
   const attachments: { filename: string; content: Buffer; contentType: string }[] = [];
 
+  // Invoice issuance is a legal/accounting side effect and must not depend on
+  // SMTP availability or on whether the admin wants it attached to email.
+  // This also guarantees that an order receives its number at confirmation,
+  // rather than only when somebody later opens the download link.
   try {
     const settings = await getInvoiceSettings();
-    if (settings.attachToOrderEmail) {
-      const invoice = await getOrCreateInvoice(orderId);
-      if (invoice?.snapshot) {
+    const invoice = await getOrCreateInvoice(orderId);
+    if (settings.attachToOrderEmail && invoice?.snapshot) {
         attachments.push({
           filename: `${String(invoice.invoiceNumber).replace(/[^\w.-]+/g, "-")}.pdf`,
           content: renderInvoicePdf(invoice.snapshot),
           contentType: "application/pdf",
         });
-      }
     }
   } catch (err) {
     // Send the email without the invoice rather than losing the confirmation.
     console.error("[invoice] Could not attach invoice to order email:", err);
+  }
+
+  const transport = getTransport();
+  if (!transport) {
+    console.warn(`[email] SMTP not configured — skipping "${subject}" to ${to}`);
+    return;
   }
 
   try {

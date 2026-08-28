@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import Invoice from "@/models/Invoice";
 import InvoiceSettings from "@/models/InvoiceSettings";
 import { Order, User } from "@/models";
+import type { ClientSession } from "mongoose";
 import {
   getInvoiceSettings,
   financialYearOf,
@@ -444,30 +445,32 @@ export function computeInvoiceSnapshot(
  */
 async function allocateInvoiceNumber(
   settings: InvoiceSettingsData,
-  issuedAt: Date
+  issuedAt: Date,
+  session: ClientSession
 ): Promise<{ invoiceNumber: string; sequence: number; financialYear: string }> {
   const fy = financialYearOf(issuedAt);
   const { prefix, includeFinancialYear, padding, resetEachFinancialYear } = settings.numbering;
 
-  const isNewYear =
-    resetEachFinancialYear && settings.numbering.sequenceFinancialYear !== fy;
-
   let sequence: number;
 
-  if (isNewYear) {
-    // Roll the counter into the new financial year, starting at 1.
-    const updated = await InvoiceSettings.findOneAndUpdate(
-      { singletonKey: "invoice" },
+  // The conditional reset lets only one transaction claim sequence 1. Any
+  // concurrent transaction is retried by MongoDB and continues through the
+  // normal increment branch with sequence 2 or later.
+  const reset = resetEachFinancialYear
+    ? await InvoiceSettings.findOneAndUpdate(
+      { singletonKey: "invoice", "numbering.sequenceFinancialYear": { $ne: fy } },
       { $set: { "numbering.sequenceFinancialYear": fy, "numbering.nextSequence": 2 } },
-      { new: true, upsert: true, setDefaultsOnInsert: true }
-    ).lean<any>();
+      { new: false, session }
+    ).lean<any>()
+    : null;
+
+  if (reset) {
     sequence = 1;
-    void updated;
   } else {
     const updated = await InvoiceSettings.findOneAndUpdate(
       { singletonKey: "invoice" },
       { $inc: { "numbering.nextSequence": 1 }, $set: { "numbering.sequenceFinancialYear": fy } },
-      { new: false, upsert: true, setDefaultsOnInsert: true }
+      { new: false, upsert: true, setDefaultsOnInsert: true, session }
     ).lean<any>();
     sequence = Number(updated?.numbering?.nextSequence ?? settings.numbering.nextSequence) || 1;
   }
@@ -506,35 +509,46 @@ export async function getOrCreateInvoice(orderId: string): Promise<any> {
     phone: customer?.phone ?? "",
   };
 
-  const { invoiceNumber, sequence, financialYear } = await allocateInvoiceNumber(settings, issuedAt);
-
-  const snapshot = computeInvoiceSnapshot(order, settings, buyer, {
-    invoiceNumber,
-    issuedAt,
-    financialYear,
-  });
-
+  const session = await Invoice.startSession();
   try {
-    const created = await Invoice.create({
-      order: order._id,
-      user: order.user,
-      invoiceNumber,
-      financialYear,
-      sequence,
-      issuedAt,
-      grandTotal: snapshot.totals.grandTotal,
-      totalTax: snapshot.totals.totalTax,
-      buyerName: snapshot.buyer.name,
-      placeOfSupply: snapshot.placeOfSupply,
-      isInterState: snapshot.isInterState,
-      snapshot,
+    let result: any = null;
+    await session.withTransaction(async () => {
+      const winner = await Invoice.findOne({ order: orderId }).session(session).lean();
+      if (winner) {
+        result = winner;
+        return;
+      }
+
+      const { invoiceNumber, sequence, financialYear } = await allocateInvoiceNumber(settings, issuedAt, session);
+      const snapshot = computeInvoiceSnapshot(order, settings, buyer, {
+        invoiceNumber,
+        issuedAt,
+        financialYear,
+      });
+      const [created] = await Invoice.create([{
+        order: order._id,
+        user: order.user,
+        invoiceNumber,
+        financialYear,
+        sequence,
+        issuedAt,
+        grandTotal: snapshot.totals.grandTotal,
+        totalTax: snapshot.totals.totalTax,
+        buyerName: snapshot.buyer.name,
+        placeOfSupply: snapshot.placeOfSupply,
+        isInterState: snapshot.isInterState,
+        snapshot,
+      }], { session });
+      result = created.toObject();
     });
-    return created.toObject();
+    return result;
   } catch (err: unknown) {
     if (typeof err === "object" && err !== null && (err as { code?: number }).code === 11000) {
       // Lost a race — the other request already issued this order's invoice.
       return await Invoice.findOne({ order: orderId }).lean();
     }
     throw err;
+  } finally {
+    await session.endSession();
   }
 }

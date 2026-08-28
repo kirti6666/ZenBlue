@@ -89,7 +89,7 @@ export function OrderActions({
               <p className="text-sm font-medium">Cancel order {orderNumber}?</p>
               <p className="mt-1 text-xs text-gray-500">
                 Stock goes back on sale immediately. Anything already paid is refunded as store
-                credit, and a credit note is emailed to you.
+                credit, and a PDF credit note is emailed to you.
               </p>
               <div className="mt-3 flex gap-2">
                 <button

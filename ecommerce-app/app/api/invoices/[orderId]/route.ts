@@ -4,6 +4,7 @@ import { Order } from "@/models";
 import { requireAuth } from "@/lib/middleware/requireAuth";
 import { getOrCreateInvoice } from "@/lib/invoice/compute";
 import { renderInvoicePdf } from "@/lib/invoice/render";
+import { PERMISSIONS } from "@/lib/permissions";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +29,10 @@ export async function GET(req: NextRequest, { params }: { params: { orderId: str
     if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
     const isOwner = String(order.user) === user.id;
-    if (!isOwner && user.role !== "admin") {
+    const canManageInvoices =
+      user.role === "admin" ||
+      (user.role === "staff" && user.permissions?.includes(PERMISSIONS.INVOICES));
+    if (!isOwner && !canManageInvoices) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 

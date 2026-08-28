@@ -3,6 +3,7 @@ import { CreditNote, Invoice, Order, ReturnRequest } from "@/models";
 import InvoiceSettings from "@/models/InvoiceSettings";
 import { getInvoiceSettings, financialYearOf } from "./settings";
 import { amountInWords, stateCodeFor } from "./compute";
+import { sendCreditNoteEmail } from "./creditNoteEmail";
 
 /**
  * Credit notes — the GST document issued whenever value flows back to the
@@ -217,6 +218,9 @@ export async function issueCreditNote(input: IssueCreditNoteInput) {
   if (input.returnRequestId) {
     await ReturnRequest.findByIdAndUpdate(input.returnRequestId, { creditNote: note._id });
   }
+
+  const recipient = snapshot.buyer?.email || order.guestEmail || "";
+  if (recipient) await sendCreditNoteEmail(note.toObject(), recipient);
 
   return note;
 }

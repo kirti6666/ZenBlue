@@ -44,6 +44,11 @@ interface ErpStatus {
   orderPush?: { ready: boolean; missing: string[] };
 }
 
+interface MappingData {
+  erpItems: { id: string; name: string; nativeSku: string; mappedSku: string }[];
+  websiteSkus: { sku: string; label: string }[];
+}
+
 const OPERATIONS = [
   {
     key: "products",
@@ -116,6 +121,9 @@ export function ErpPanel({ configured }: { configured: boolean }) {
   const [busy, setBusy] = useState("");
   const [result, setResult] = useState<Record<string, SyncReport> | null>(null);
   const [error, setError] = useState("");
+  const [mappingData, setMappingData] = useState<MappingData | null>(null);
+  const [mappingDraft, setMappingDraft] = useState<Record<string, string>>({});
+  const [mappingBusy, setMappingBusy] = useState(false);
 
   const checkStatus = useCallback(async () => {
     if (!configured) return;
@@ -134,6 +142,45 @@ export function ErpPanel({ configured }: { configured: boolean }) {
   useEffect(() => {
     checkStatus();
   }, [checkStatus]);
+
+  const loadMappings = useCallback(async () => {
+    if (!configured) return;
+    try {
+      const response = await fetch("/api/erp/mappings", { cache: "no-store" });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Could not load SKU mappings");
+      setMappingData(json);
+      setMappingDraft(Object.fromEntries(json.erpItems.map((item: MappingData["erpItems"][number]) => [item.id, item.mappedSku])));
+    } catch (mappingError) {
+      setError(mappingError instanceof Error ? mappingError.message : "Could not load SKU mappings");
+    }
+  }, [configured]);
+
+  useEffect(() => {
+    loadMappings();
+  }, [loadMappings]);
+
+  async function saveMappings() {
+    setMappingBusy(true);
+    setError("");
+    try {
+      const mappings = Object.entries(mappingDraft)
+        .filter(([, websiteSku]) => Boolean(websiteSku))
+        .map(([erpItemId, websiteSku]) => ({ erpItemId, websiteSku }));
+      const response = await fetch("/api/erp/mappings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mappings }),
+      });
+      const json = await response.json();
+      if (!response.ok) throw new Error(json.error ?? "Could not save SKU mappings");
+      await loadMappings();
+    } catch (mappingError) {
+      setError(mappingError instanceof Error ? mappingError.message : "Could not save SKU mappings");
+    } finally {
+      setMappingBusy(false);
+    }
+  }
 
   async function run(operation: string) {
     setBusy(operation);
@@ -200,6 +247,47 @@ export function ErpPanel({ configured }: { configured: boolean }) {
           “Run all” never creates ERP invoices. Order push is isolated below and always requires a separate click.
         </p>
       </Card>
+
+      {mappingData && mappingData.erpItems.some((item) => !item.nativeSku) && (
+        <Card>
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <p className="eyebrow">ERP item mapping</p>
+              <p className="mt-2 max-w-3xl text-sm text-heading">
+                HisabKitab items without a SKU must be linked once to a website product or variant. Price, stock and order sync then use this stable ERP item ID mapping.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={saveMappings}
+              disabled={mappingBusy || Boolean(busy)}
+              className="rounded-lg bg-primary px-4 py-2 text-xs font-medium text-primary-foreground disabled:opacity-50"
+            >
+              {mappingBusy ? "Saving…" : "Save mappings"}
+            </button>
+          </div>
+          <div className="mt-4 max-h-[34rem] divide-y divide-line overflow-y-auto rounded-lg border border-line">
+            {mappingData.erpItems.filter((item) => !item.nativeSku).map((item) => (
+              <label key={item.id} className="grid gap-2 px-3 py-3 sm:grid-cols-[minmax(0,1fr)_minmax(16rem,1fr)] sm:items-center">
+                <span className="min-w-0">
+                  <span className="block truncate text-sm font-medium text-heading">{item.name}</span>
+                  <span className="block text-[11px] text-muted">ERP item {item.id}</span>
+                </span>
+                <select
+                  value={mappingDraft[item.id] ?? ""}
+                  onChange={(event) => setMappingDraft((current) => ({ ...current, [item.id]: event.target.value }))}
+                  className="w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-heading"
+                >
+                  <option value="">Not mapped</option>
+                  {mappingData.websiteSkus.map((option) => (
+                    <option key={option.sku} value={option.sku}>{option.label} · {option.sku}</option>
+                  ))}
+                </select>
+              </label>
+            ))}
+          </div>
+        </Card>
+      )}
 
       <div className="grid gap-4 xl:grid-cols-2">
         {OPERATIONS.map((operation) => {

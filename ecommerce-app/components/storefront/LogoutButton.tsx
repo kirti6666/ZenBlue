@@ -1,9 +1,10 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 
-export function LogoutButton({ className }: { className?: string }) {
+export function LogoutButton({ className, children }: { className?: string; children?: ReactNode }) {
   const router = useRouter();
 
   async function handleLogout() {
@@ -18,7 +19,7 @@ export function LogoutButton({ className }: { className?: string }) {
 
   return (
     <button onClick={handleLogout} className={className ?? "hover:underline text-sm"}>
-      Logout
+      {children ?? "Logout"}
     </button>
   );
 }

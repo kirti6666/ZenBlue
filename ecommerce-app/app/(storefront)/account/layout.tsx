@@ -1,39 +1,20 @@
 import { redirect } from "next/navigation";
-import { connectDB } from "@/lib/db";
-import { User } from "@/models";
 import { getServerUser } from "@/lib/middleware/getServerUser";
-import { AccountNav } from "@/components/storefront/AccountNav";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Shell for every /account/* page: sidebar on the left, the page itself on the
- * right.
- *
- * The sign-in check lives here as well as in each page. That is deliberate
- * duplication — a layout is not a security boundary on its own (a child page
- * still renders if it forgets its own check), so the pages keep theirs and this
- * one exists so an unauthenticated visitor never sees the chrome flash before
- * being redirected.
+ * Authentication shell for every /account/* page. Navigation intentionally
+ * lives only on /account, keeping orders, wishlist, returns and profile pages
+ * focused on their own content.
  */
 export default async function AccountLayout({ children }: { children: React.ReactNode }) {
   const current = await getServerUser();
   if (!current) redirect("/login?callbackUrl=/account");
 
-  await connectDB();
-  const profile = await User.findById(current.id)
-    .select("name firstName lastName email")
-    .lean<{ name?: string; firstName?: string; lastName?: string; email?: string } | null>();
-
-  const name =
-    [profile?.firstName, profile?.lastName].filter(Boolean).join(" ").trim() ||
-    profile?.name ||
-    "there";
-
   return (
-    <div className="mx-auto grid w-full min-w-0 max-w-page gap-5 overflow-hidden px-4 py-5 sm:gap-6 sm:px-6 sm:py-7 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-10 lg:overflow-visible lg:py-10">
-      <AccountNav name={name} email={profile?.email ?? current.email} />
-      <div className="min-w-0">{children}</div>
+    <div className="mx-auto w-full min-w-0 max-w-page px-4 py-4 sm:px-6 sm:py-6 lg:py-8">
+      {children}
     </div>
   );
 }

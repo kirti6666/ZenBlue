@@ -1,7 +1,7 @@
 import { connectDB } from "@/lib/db";
 import { adjustStock, variantKey } from "@/lib/inventory";
 import { slugify } from "@/lib/slugify";
-import { Category, Order, Product, ReturnRequest, User } from "@/models";
+import { Category, ErpSkuMapping, Order, Product, ReturnRequest, User } from "@/models";
 
 /** HisabKitab third-party API adapter used by the manual Admin -> ERP sync panel. */
 
@@ -144,8 +144,19 @@ function stringValue(value: unknown): string {
   return value === undefined || value === null ? "" : String(value).trim();
 }
 
-function skuOf(raw: any): string {
-  return stringValue(raw?.sku ?? raw?.SKU ?? raw?.itemCode ?? raw?.item_code ?? raw?.code);
+function erpItemIdOf(raw: any): string {
+  return stringValue(raw?.id ?? raw?.item_id ?? raw?.tally_id);
+}
+
+function skuOf(raw: any, mapped?: Map<string, string>): string {
+  const native = stringValue(raw?.sku ?? raw?.SKU ?? raw?.itemCode ?? raw?.item_code ?? raw?.code);
+  if (native) return native;
+  return mapped?.get(erpItemIdOf(raw)) ?? "";
+}
+
+async function erpSkuMap(): Promise<Map<string, string>> {
+  const rows = await ErpSkuMapping.find({}).select("erpItemId websiteSku").lean<any[]>();
+  return new Map(rows.map((row) => [stringValue(row.erpItemId), stringValue(row.websiteSku)]));
 }
 
 function numberValue(...values: unknown[]): number | undefined {
@@ -174,6 +185,7 @@ export async function syncProductsFromErp(): Promise<SyncReport> {
     return result;
   }
   await connectDB();
+  const mappedSkus = await erpSkuMap();
   const source = rowsOf(response.data);
   result.sourceCount = source.length;
   const categories = await Category.find({}).select("_id name slug").lean<any[]>();
@@ -185,7 +197,7 @@ export async function syncProductsFromErp(): Promise<SyncReport> {
   const fallbackCategory = process.env.ERP_DEFAULT_CATEGORY_SLUG ? categoryMap.get(process.env.ERP_DEFAULT_CATEGORY_SLUG.toLowerCase()) : undefined;
   let created = 0;
   for (const raw of source) {
-    const sku = skuOf(raw);
+    const sku = skuOf(raw, mappedSkus);
     if (!sku) {
       result.skipped += 1;
       continue;
@@ -249,17 +261,18 @@ export async function syncProductsFromErp(): Promise<SyncReport> {
 }
 
 export async function syncPricesFromErp(): Promise<SyncReport> {
-  const result = report("MRP and selling price are pulled from the ERP item master by SKU.");
+  const result = report("MRP and selling price are pulled from the ERP item master by SKU, including variant-specific rates.");
   const response = await call<any>(ERP_ENDPOINTS.prices);
   if (!response.ok) {
     addError(result, response.error ?? "Price fetch failed");
     return result;
   }
   await connectDB();
+  const mappedSkus = await erpSkuMap();
   const source = rowsOf(response.data);
   result.sourceCount = source.length;
   for (const raw of source) {
-    const sku = skuOf(raw);
+    const sku = skuOf(raw, mappedSkus);
     const price = numberValue(raw?.mrp, raw?.price, raw?.rate);
     if (!sku || price === undefined || price <= 0) {
       result.skipped += 1;
@@ -271,8 +284,24 @@ export async function syncPricesFromErp(): Promise<SyncReport> {
       result.skipped += 1;
       continue;
     }
+    const combo = product.variantCombinations?.find((entry: any) => stringValue(entry.sku).toUpperCase() === sku.toUpperCase());
     const selling = numberValue(raw?.selling_price_with_gst, raw?.selling_price_without_gst, raw?.salePrice);
-    const discountPrice = selling && selling > 0 && selling < price ? selling : undefined;
+    const effectivePrice = selling && selling > 0 ? selling : price;
+
+    // A variant SKU must only change that variant. Updating the product base
+    // price here would silently change every other size/colour on the PDP.
+    if (combo) {
+      if (combo.price === effectivePrice) {
+        result.skipped += 1;
+        continue;
+      }
+      combo.price = effectivePrice;
+      await product.save();
+      result.updated += 1;
+      continue;
+    }
+
+    const discountPrice = effectivePrice < price ? effectivePrice : undefined;
     if (product.price === price && (product.discountPrice ?? undefined) === discountPrice) {
       result.skipped += 1;
       continue;
@@ -293,10 +322,11 @@ export async function syncStockFromErp(): Promise<SyncReport> {
     return result;
   }
   await connectDB();
+  const mappedSkus = await erpSkuMap();
   const source = rowsOf(response.data);
   result.sourceCount = source.length;
   for (const raw of source) {
-    const sku = skuOf(raw);
+    const sku = skuOf(raw, mappedSkus);
     const quantity = numberValue(raw?.closing_stock, raw?.quantity, raw?.qty, raw?.stock);
     if (!sku || quantity === undefined || quantity < 0) {
       result.skipped += 1;
@@ -454,12 +484,83 @@ export function getOrderPushReadiness(): { ready: boolean; missing: string[] } {
 async function erpItemMap(): Promise<Map<string, any>> {
   const response = await call<any>(ERP_ENDPOINTS.products);
   if (!response.ok) throw new Error(response.error ?? "Could not load ERP items");
+  await connectDB();
+  const mappedSkus = await erpSkuMap();
   const items = new Map<string, any>();
   for (const raw of rowsOf(response.data)) {
-    const sku = skuOf(raw).toUpperCase();
+    const sku = skuOf(raw, mappedSkus).toUpperCase();
     if (sku) items.set(sku, raw);
   }
   return items;
+}
+
+export interface ErpMappingData {
+  erpItems: { id: string; name: string; nativeSku: string; mappedSku: string }[];
+  websiteSkus: { sku: string; label: string }[];
+}
+
+/** Sanitised item/SKU data for the admin mapping screen. */
+export async function getErpMappingData(): Promise<ErpResult<ErpMappingData>> {
+  const response = await call<any>(ERP_ENDPOINTS.products);
+  if (!response.ok) return { ok: false, status: response.status, error: response.error };
+  await connectDB();
+  const mappings = await erpSkuMap();
+  const products = await Product.find({}).select("title sku variantCombinations").lean<any[]>();
+  const websiteSkus: ErpMappingData["websiteSkus"] = [];
+  for (const product of products) {
+    if (stringValue(product.sku)) websiteSkus.push({ sku: stringValue(product.sku).toUpperCase(), label: product.title });
+    for (const combo of product.variantCombinations ?? []) {
+      const sku = stringValue(combo.sku).toUpperCase();
+      if (!sku) continue;
+      const values = combo.combination instanceof Map ? [...combo.combination.values()] : Object.values(combo.combination ?? {});
+      websiteSkus.push({ sku, label: `${product.title} — ${values.join(" / ")}` });
+    }
+  }
+  websiteSkus.sort((a, b) => a.label.localeCompare(b.label));
+  const erpItems = rowsOf(response.data).map((raw) => {
+    const id = erpItemIdOf(raw);
+    return {
+      id,
+      name: stringValue(raw?.item_name ?? raw?.name ?? raw?.title) || id,
+      nativeSku: skuOf(raw),
+      mappedSku: mappings.get(id) ?? "",
+    };
+  });
+  return { ok: true, status: response.status, data: { erpItems, websiteSkus } };
+}
+
+export async function replaceErpSkuMappings(mappings: { erpItemId: string; websiteSku: string }[]): Promise<{ saved: number }> {
+  await connectDB();
+  const clean = mappings
+    .map((entry) => ({ erpItemId: stringValue(entry.erpItemId), websiteSku: stringValue(entry.websiteSku).toUpperCase() }))
+    .filter((entry) => entry.erpItemId && entry.websiteSku);
+  if (new Set(clean.map((entry) => entry.erpItemId)).size !== clean.length) {
+    throw new Error("Each ERP item can only be mapped once");
+  }
+  if (new Set(clean.map((entry) => entry.websiteSku)).size !== clean.length) {
+    throw new Error("Each website SKU can only be linked to one ERP item");
+  }
+  const itemIds = clean.map((entry) => entry.erpItemId);
+  if (clean.length) {
+    await ErpSkuMapping.bulkWrite(
+      clean.map((entry) => ({
+        updateOne: { filter: { erpItemId: entry.erpItemId }, update: { $set: entry }, upsert: true },
+      }))
+    );
+  }
+  await ErpSkuMapping.deleteMany(itemIds.length ? { erpItemId: { $nin: itemIds } } : {});
+  return { saved: clean.length };
+}
+
+async function erpSaleMap(): Promise<Map<string, any>> {
+  const response = await call<any>(transactionPath(ERP_ENDPOINTS.orders));
+  if (!response.ok) throw new Error(response.error ?? "Could not load ERP sale transactions");
+  const sales = new Map<string, any>();
+  for (const raw of rowsOf(response.data)) {
+    const invoice = stringValue(raw?.invoice_number ?? raw?.invoice_no ?? raw?.reference).toUpperCase();
+    if (invoice) sales.set(invoice, raw);
+  }
+  return sales;
 }
 
 async function pushOneOrder(order: any, itemsBySku: Map<string, any>): Promise<ErpResult<any>> {
@@ -524,7 +625,7 @@ async function pushOneOrder(order: any, itemsBySku: Map<string, any>): Promise<E
 
 /** Manually push up to 25 eligible unsynced website orders to HisabKitab. */
 export async function pushOrdersToErp(): Promise<SyncReport> {
-  const result = report("Creates HisabKitab item-sale invoices. This is never part of Run all and must be triggered separately.");
+  const result = report("Creates HisabKitab item-sale invoices after an idempotency check by website order number.");
   const readiness = getOrderPushReadiness();
   if (!readiness.ready) {
     addError(result, `Order push is not ready: ${readiness.missing.join(", ")}`);
@@ -532,8 +633,9 @@ export async function pushOrdersToErp(): Promise<SyncReport> {
   }
   await connectDB();
   let itemsBySku: Map<string, any>;
+  let existingSales: Map<string, any>;
   try {
-    itemsBySku = await erpItemMap();
+    [itemsBySku, existingSales] = await Promise.all([erpItemMap(), erpSaleMap()]);
   } catch (error) {
     addError(result, error instanceof Error ? error.message : String(error));
     return result;
@@ -542,6 +644,22 @@ export async function pushOrdersToErp(): Promise<SyncReport> {
   result.sourceCount = orders.length;
   for (const order of orders) {
     result.examined += 1;
+    // If a previous request reached the ERP but our database update failed,
+    // reconcile the existing invoice instead of creating a duplicate sale.
+    const existing = existingSales.get(stringValue(order.orderNumber).toUpperCase());
+    if (existing) {
+      await Order.updateOne(
+        { _id: order._id },
+        {
+          erpTransactionId: stringValue(existing?.transaction_id ?? existing?.id),
+          erpInvoiceNumber: stringValue(existing?.invoice_number) || order.orderNumber,
+          erpSyncedAt: new Date(),
+          erpSyncError: "",
+        }
+      );
+      result.updated += 1;
+      continue;
+    }
     const pushed = await pushOneOrder(order, itemsBySku);
     if (!pushed.ok) {
       await Order.updateOne({ _id: order._id }, { erpSyncError: pushed.error ?? "ERP order push failed" });
