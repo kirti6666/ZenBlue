@@ -1,9 +1,9 @@
 "use client";
 
-import { Suspense, useRef, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { signIn } from "next-auth/react";
+import { getProviders, signIn } from "next-auth/react";
 import { ShieldCheck } from "lucide-react";
 import { OtpLoginForm } from "@/components/storefront/OtpLoginForm";
 
@@ -24,6 +24,7 @@ function LoginForm() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [googleReady, setGoogleReady] = useState<boolean | null>(null);
 
   // Two-factor challenge state.
   const [twoFactor, setTwoFactor] = useState<{
@@ -34,6 +35,33 @@ function LoginForm() {
   } | null>(null);
   const [code, setCode] = useState("");
   const codeRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let active = true;
+    getProviders()
+      .then((providers) => {
+        if (active) setGoogleReady(Boolean(providers?.google));
+      })
+      .catch(() => {
+        if (active) setGoogleReady(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  async function handleGoogleSignIn() {
+    setError("");
+    if (!googleReady) {
+      setError(
+        googleReady === null
+          ? "Checking Google sign-in configuration…"
+          : "Google sign-in is not configured yet. Add the Google OAuth client ID and secret."
+      );
+      return;
+    }
+    await signIn("google", { callbackUrl });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -241,10 +269,11 @@ function LoginForm() {
 
       <button
         type="button"
-        onClick={() => signIn("google", { callbackUrl })}
-        className="w-full rounded-lg border border-line py-3 text-sm font-medium text-heading hover:border-primary"
+        onClick={handleGoogleSignIn}
+        aria-disabled={googleReady !== true}
+        className="w-full rounded-lg border border-line py-3 text-sm font-medium text-heading transition-colors hover:border-primary aria-disabled:cursor-not-allowed aria-disabled:text-muted"
       >
-        Continue with Google
+        {googleReady === null ? "Checking Google sign-in…" : "Continue with Google"}
       </button>
 
       <p className="text-center text-sm text-muted">

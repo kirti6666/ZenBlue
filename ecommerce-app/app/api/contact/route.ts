@@ -8,6 +8,7 @@ import { PERMISSIONS } from "@/lib/permissions";
 import { getSiteSettings } from "@/lib/site-settings";
 import { sendEmail } from "@/lib/email";
 import { emailShell } from "@/lib/notifications/templates";
+import { getEnquiryRecipients } from "@/lib/enquiry-recipients";
 
 // Reads cookies/query params per request — never statically rendered.
 export const dynamic = "force-dynamic";
@@ -46,7 +47,10 @@ export async function POST(req: NextRequest) {
 
     // The message is persisted first, so an SMTP failure below can never lose it.
     const settings = await getSiteSettings();
-    const inbox = settings.contact.supportEmail || settings.contact.email;
+    const inbox = getEnquiryRecipients(
+      settings.contact.supportEmail,
+      settings.contact.email
+    );
     if (inbox) {
       await sendEmail({
         to: inbox,

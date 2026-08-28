@@ -428,8 +428,8 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
     copyrightText: "© {year} ZEN BLUE. All rights reserved.",
   },
   contact: {
-    email: "kirtigunjan55@gmail.com",
-    supportEmail: "kirtigunjan55@gmail.com",
+    email: "zenblueclothing@gmail.com",
+    supportEmail: "zenblueclothing@gmail.com",
     phone: "+91 74878 59546",
     whatsapp: "917487859546",
     address: "",

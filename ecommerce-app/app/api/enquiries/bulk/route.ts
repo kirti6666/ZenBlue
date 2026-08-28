@@ -3,9 +3,10 @@ import { z } from "zod";
 import { connectDB } from "@/lib/db";
 import { ContactMessage } from "@/models";
 import { getCurrentUser } from "@/lib/middleware/requireAuth";
-import { getSiteSettings, DEFAULT_SETTINGS } from "@/lib/site-settings";
+import { getSiteSettings } from "@/lib/site-settings";
 import { sendEmail } from "@/lib/email";
 import { emailShell } from "@/lib/notifications/templates";
+import { getEnquiryRecipients } from "@/lib/enquiry-recipients";
 
 export const dynamic = "force-dynamic";
 
@@ -90,22 +91,11 @@ export async function POST(req: NextRequest) {
     // default is used rather than dropping the enquiry silently — this is the
     // one message on the site where "no recipient configured" is not an
     // acceptable outcome.
-    const recipients = Array.from(
-      new Set(
-        [
-          settings.contact.supportEmail,
-          settings.contact.email,
-          process.env.BULK_ENQUIRY_EMAIL,
-        ]
-          .map((a) => a?.trim().toLowerCase())
-          .filter((a): a is string => !!a && a.includes("@"))
-      )
+    const inbox = getEnquiryRecipients(
+      settings.contact.supportEmail,
+      settings.contact.email,
+      process.env.BULK_ENQUIRY_EMAIL
     );
-    if (recipients.length === 0) {
-      const fallback = DEFAULT_SETTINGS.contact.supportEmail || DEFAULT_SETTINGS.contact.email;
-      if (fallback) recipients.push(fallback);
-    }
-    const inbox = recipients.join(", ");
 
     if (inbox) {
       const rows: [string, string][] = [

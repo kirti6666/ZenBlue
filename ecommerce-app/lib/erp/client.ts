@@ -446,7 +446,7 @@ export async function syncOrderStatusFromErp(): Promise<SyncReport> {
 }
 
 export function getOrderPushReadiness(): { ready: boolean; missing: string[] } {
-  const required = ["ERP_DEFAULT_COUNTRY_ID", "ERP_DEFAULT_STATE_ID", "ERP_DEFAULT_CITY_ID", "ERP_DEFAULT_GST_TAX_ID"];
+  const required = ["ERP_DEFAULT_COUNTRY_ID", "ERP_DEFAULT_STATE_ID", "ERP_DEFAULT_CITY_ID"];
   const missing = required.filter((name) => !process.env[name]?.trim());
   return { ready: missing.length === 0, missing };
 }
@@ -475,8 +475,15 @@ async function pushOneOrder(order: any, itemsBySku: Map<string, any>): Promise<E
     if (!sku || !erpItem) return { ok: false, error: `SKU ${sku || "(blank)"} is not mapped to an ERP item` };
     const ledgerId = erpItem.income_ledger_id || process.env.ERP_DEFAULT_SALES_LEDGER_ID;
     const unitId = erpItem.unit_of_measurement || process.env.ERP_DEFAULT_UNIT_ID;
+    // HisabKitab's item-list response calls the GST master record id `gst_rate`.
+    // Prefer that item-specific mapping so mixed-rate catalogues are exported
+    // correctly; the environment value remains an optional legacy fallback.
+    const gstTaxId = erpItem.gst_rate ?? erpItem.gst_tax_id ?? erpItem.gst_id ?? process.env.ERP_DEFAULT_GST_TAX_ID;
     if (!ledgerId || !unitId) return { ok: false, error: `SKU ${sku} is missing ERP income ledger or unit id` };
-    erpItems.push({ item_id: erpItem.id, additional_description: item.title, ledger_id: ledgerId, unit_id: unitId, quantity: item.quantity, mrp: item.price, rpu: item.price, with_tax: 1, discount_type: 1, discount_value: 0, discount_type_2: 1, discount_value_2: 0, gst_id: process.env.ERP_DEFAULT_GST_TAX_ID, cess: 0, total: item.price * item.quantity });
+    if (gstTaxId === undefined || gstTaxId === null || String(gstTaxId).trim() === "") {
+      return { ok: false, error: `SKU ${sku} has no ERP GST mapping and ERP_DEFAULT_GST_TAX_ID is blank` };
+    }
+    erpItems.push({ item_id: erpItem.id, additional_description: item.title, ledger_id: ledgerId, unit_id: unitId, quantity: item.quantity, mrp: item.price, rpu: item.price, with_tax: 1, discount_type: 1, discount_value: 0, discount_type_2: 1, discount_value_2: 0, gst_id: gstTaxId, cess: 0, total: item.price * item.quantity });
   }
   const address = order.billingAddress || order.shippingAddress;
   const shipping = order.shippingAddress;
