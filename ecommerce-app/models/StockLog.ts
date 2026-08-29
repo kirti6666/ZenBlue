@@ -19,6 +19,7 @@ export const STOCK_REASONS = [
   "return_restock",
   "return_written_off",
   "exchange_reserved",
+  "exchange_released",
   "csv_import",
   "erp_sync",
   "initial_stock",

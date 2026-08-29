@@ -240,7 +240,6 @@ const TABS = [
   "SEO",
   "Theme",
   "Commerce",
-  "Announcement",
   "Homepage",
   "Navigation",
   "Footer",
@@ -592,30 +591,6 @@ export default function AdminSettingsPage() {
             hint="Show the Pay Online option at checkout."
             value={s.commerce.razorpayEnabled}
             onChange={(v) => set("commerce.razorpayEnabled", v)}
-          />
-        </div>
-      )}
-
-      {/* ------------------------- ANNOUNCEMENT -------------------- */}
-      {tab === "Announcement" && (
-        <div className="space-y-5">
-          <Toggle
-            label="Show announcement bar"
-            hint="A thin bar pinned above the header."
-            value={s.announcement.enabled}
-            onChange={(v) => set("announcement.enabled", v)}
-          />
-          <Text
-            label="Text"
-            value={s.announcement.text}
-            onChange={(v) => set("announcement.text", v)}
-            placeholder="Free shipping on orders over ₹999!"
-          />
-          <Text
-            label="Link (optional)"
-            value={s.announcement.link}
-            onChange={(v) => set("announcement.link", v)}
-            placeholder="/shop"
           />
         </div>
       )}

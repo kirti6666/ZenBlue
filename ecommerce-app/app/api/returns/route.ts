@@ -187,6 +187,7 @@ export async function GET(req: NextRequest) {
     const [requests, total] = await Promise.all([
       ReturnRequest.find(filter)
         .populate("order", "orderNumber total paymentMethod paymentStatus createdAt")
+        .populate("replacementOrder", "orderNumber orderStatus paymentStatus total createdAt")
         .populate("user", "name email phone")
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)

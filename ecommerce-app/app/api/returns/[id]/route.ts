@@ -13,6 +13,10 @@ import { adjustStock } from "@/lib/inventory";
 import { creditWallet } from "@/lib/wallet";
 import { issueCreditNote } from "@/lib/invoice/creditNote";
 import { canTransition, customerCanCancel, pushTimeline, syncOrderReturnedQuantities } from "@/lib/returns";
+import {
+  ensureReplacementOrder,
+  ReplacementOrderError,
+} from "@/lib/replacementOrders";
 
 /** Read one request. Customers may read only their own. */
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
@@ -26,6 +30,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
 
     const request = await ReturnRequest.findOne(filter)
       .populate("order", "orderNumber total paymentMethod paymentStatus createdAt shippingAddress")
+      .populate("replacementOrder", "orderNumber orderStatus paymentStatus total createdAt")
       .populate("user", "name email phone")
       .lean();
 
@@ -97,6 +102,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (!order) return NextResponse.json({ error: "Linked order is missing" }, { status: 404 });
 
     const previousStatus = request.status;
+    let createdReplacement: any = null;
     const data = parsed.data;
 
     // ---- Field updates that are not status transitions ------------------
@@ -149,8 +155,28 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         request.refundStatus = "not_applicable";
       }
 
+      if (data.status === "refund_initiated" && request.resolution === "replacement") {
+        return NextResponse.json(
+          { error: "A replacement is completed by generating its linked order, not by initiating a refund" },
+          { status: 400 }
+        );
+      }
+
+      let transitionNote = data.rejectionReason ?? "";
+      if (data.status === "completed" && request.resolution === "replacement") {
+        const replacement = await ensureReplacementOrder({
+          request,
+          originalOrder: order,
+          performedBy: admin.id,
+        });
+        request.replacementOrder = replacement.order._id;
+        request.refundStatus = "not_applicable";
+        transitionNote = `Replacement order ${replacement.order.orderNumber} generated and stock reserved`;
+        if (replacement.created) createdReplacement = replacement.order;
+      }
+
       request.status = data.status;
-      pushTimeline(request, data.status, data.rejectionReason ?? "", admin.id);
+      pushTimeline(request, data.status, transitionNote, admin.id);
 
       // Restock decisions are made once, at quality check.
       if (data.status === "qc_passed" || data.status === "qc_failed") {
@@ -261,11 +287,29 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
           ...base,
         });
       }
+
+      if (createdReplacement) {
+        await notify({
+          event: "order_confirmed",
+          recipient: { email: customer.email, phone: customer.phone, userId: String(request.user) },
+          orderId: String(createdReplacement._id),
+          settings,
+          context: {
+            customerName: customer.name,
+            orderNumber: createdReplacement.orderNumber,
+            orderUrl: absoluteUrl(`/account/orders/${createdReplacement._id}`),
+            total: 0,
+          },
+        });
+      }
     }
 
     return NextResponse.json({ request: request.toObject() });
   } catch (err) {
     console.error("Update return error:", err);
+    if (err instanceof ReplacementOrderError) {
+      return NextResponse.json({ error: err.message }, { status: 400 });
+    }
     return NextResponse.json({ error: "Could not update the request" }, { status: 500 });
   }
 }

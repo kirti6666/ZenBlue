@@ -127,14 +127,29 @@ export function ProductDetailClient({
     ? Math.round(((product.price - displayPrice) / product.price) * 100)
     : 0;
 
+  const selectedVariantImage = useMemo(() => {
+    if (matchedCombination?.image) return matchedCombination.image;
+
+    // A catalogue may store one photograph per colour rather than repeating
+    // it for every size combination. In that case, use the photograph from
+    // any combination with the currently selected colour.
+    const colourAttribute = product.variants.find((variant) => /colou?r/i.test(variant.name));
+    if (!colourAttribute) return undefined;
+    const colour = selected[colourAttribute.name];
+    return product.variantCombinations.find(
+      (combination) =>
+        combination.combination[colourAttribute.name] === colour && combination.image
+    )?.image;
+  }, [matchedCombination, product.variantCombinations, product.variants, selected]);
+
   // A variant with its own photograph leads the gallery, so selecting "Olive"
   // shows the olive garment rather than leaving the shopper on the navy one.
   const galleryMedia = useMemo<MediaItem[]>(() => {
     const base = normalizeMedia(product);
-    if (!matchedCombination?.image) return base;
-    const variantShot: MediaItem = { type: "image", url: matchedCombination.image };
-    return [variantShot, ...base.filter((m) => m.url !== matchedCombination.image)];
-  }, [product, matchedCombination]);
+    if (!selectedVariantImage) return base;
+    const variantShot: MediaItem = { type: "image", url: selectedVariantImage };
+    return [variantShot, ...base.filter((m) => m.url !== selectedVariantImage)];
+  }, [product, selectedVariantImage]);
 
   const selectedLabel = hasVariants ? Object.values(selected).join(" · ") : "";
   const stockMessage = outOfStock
@@ -151,7 +166,7 @@ export function ProductDetailClient({
       title: product.title,
       slug: product.slug,
       price: displayPrice,
-      image: galleryMedia.find((m) => m.type === "image")?.url,
+      image: selectedVariantImage ?? galleryMedia.find((m) => m.type === "image")?.url,
       quantity,
       variant: hasVariants ? selected : undefined,
       maxStock: stock,
@@ -165,6 +180,7 @@ export function ProductDetailClient({
     <div className="grid gap-4 md:grid-cols-2 md:gap-10 lg:gap-14">
       {/* ---- Gallery ---- */}
       <ProductGallery
+        key={selectedVariantImage ?? "default-gallery"}
         media={galleryMedia}
         title={product.title}
         saleBadge={isDiscounted ? `−${discountPercent}%` : undefined}

@@ -62,6 +62,18 @@ export function ReturnWorkflowPanel({
 
   return (
     <div className="space-y-4">
+      {request.replacementOrder && (
+        <div className="rounded-xl border border-success/40 bg-success/5 p-5">
+          <p className="eyebrow mb-2">Replacement order</p>
+          <p className="text-sm font-medium text-heading">
+            {request.replacementOrder.orderNumber}
+          </p>
+          <p className="mt-1 text-xs text-muted">
+            {String(request.replacementOrder.orderStatus).replace(/_/g, " ")} · stock reserved
+          </p>
+        </div>
+      )}
+
       <div className="rounded-xl border border-line bg-surface p-5">
         <p className="eyebrow mb-3">Actions</p>
 
@@ -267,7 +279,7 @@ export function ReturnWorkflowPanel({
       {/* Resolution */}
       {needsResolution && (
         <div className="rounded-xl border border-line bg-surface p-5">
-          <p className="eyebrow mb-3">Settle the refund</p>
+          <p className="eyebrow mb-3">Choose resolution</p>
 
           <label className="block text-xs text-muted">Resolution</label>
           <select
@@ -277,28 +289,51 @@ export function ReturnWorkflowPanel({
           >
             <option value="refund_source">Refund to original payment method</option>
             <option value="store_credit">Issue store credit</option>
-            <option value="replacement">Send a replacement</option>
+            {request.type === "exchange" && (
+              <option value="replacement">Send a replacement</option>
+            )}
           </select>
 
-          <label className="mt-3 block text-xs text-muted">
-            Refund amount ({currencySymbol})
-          </label>
-          <input
-            type="number"
-            min={0}
-            step="0.01"
-            value={refundAmount}
-            onChange={(e) => setRefundAmount(Number(e.target.value))}
-            className="mt-1.5 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-heading"
-          />
+          {resolution !== "replacement" && (
+            <>
+              <label className="mt-3 block text-xs text-muted">
+                Refund amount ({currencySymbol})
+              </label>
+              <input
+                type="number"
+                min={0}
+                step="0.01"
+                value={refundAmount}
+                onChange={(e) => setRefundAmount(Number(e.target.value))}
+                className="mt-1.5 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-heading"
+              />
+            </>
+          )}
+
+          {resolution === "replacement" && (
+            <p className="mt-3 rounded-lg bg-surface-alt p-3 text-xs text-muted">
+              This creates a linked, no-charge order using the requested variants and reserves its
+              stock immediately.
+            </p>
+          )}
 
           <button
             type="button"
             disabled={loading}
-            onClick={() => send({ status: "refund_initiated", resolution, refundAmount })}
+            onClick={() =>
+              send({
+                status: resolution === "replacement" ? "completed" : "refund_initiated",
+                resolution,
+                refundAmount,
+              })
+            }
             className="mt-3 w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground disabled:opacity-60"
           >
-            {resolution === "store_credit" ? "Issue store credit" : "Initiate refund"}
+            {resolution === "replacement"
+              ? "Generate replacement order"
+              : resolution === "store_credit"
+                ? "Issue store credit"
+                : "Initiate refund"}
           </button>
         </div>
       )}

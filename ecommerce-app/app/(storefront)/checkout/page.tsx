@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useCartStore } from "@/store/useCartStore";
 import { AddressForm } from "@/components/storefront/AddressForm";
 import { AvailableCoupons } from "@/components/storefront/AvailableCoupons";
+import { StoreImage } from "@/components/storefront/StoreImage";
 
 interface Address {
   _id: string;
@@ -584,12 +585,29 @@ export default function CheckoutPage() {
           {items.map((item) => (
             <div
               key={item.productId + JSON.stringify(item.variant ?? {})}
-              className="flex items-start justify-between gap-3"
+              className="flex items-center gap-3"
             >
-              <span className="line-clamp-1 font-display text-[13px] text-heading">
-                <span className="font-bold">{item.title}</span>{" "}
-                <span className="font-normal">× {item.quantity}</span>
-              </span>
+              <div className="h-14 w-12 shrink-0 overflow-hidden rounded-md bg-surface-alt">
+                <StoreImage
+                  src={item.image}
+                  alt={`${item.title} selected colour`}
+                  width={120}
+                  sizes="48px"
+                  className="h-full w-full object-cover"
+                />
+              </div>
+              <div className="min-w-0 flex-1">
+                <p className="line-clamp-1 font-display text-[13px] font-bold text-heading">
+                  {item.title} <span className="font-normal">× {item.quantity}</span>
+                </p>
+                {item.variant && (
+                  <p className="mt-0.5 line-clamp-1 text-[10px] text-muted">
+                    {Object.entries(item.variant)
+                      .map(([name, value]) => `${name}: ${value}`)
+                      .join(" / ")}
+                  </p>
+                )}
+              </div>
               <span className="shrink-0 font-sans text-xs font-medium text-heading">{cur}{item.price * item.quantity}</span>
             </div>
           ))}

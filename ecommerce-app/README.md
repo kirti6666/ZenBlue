@@ -133,7 +133,9 @@ Authorization: Bearer $CRON_SECRET
 
 It runs the abandoned-cart recovery sweep and retries failed notifications.
 Point any scheduler at it (Vercel Cron, GitHub Actions, cron-job.org) on a
-15–30 minute cadence. Without `CRON_SECRET` set, the bearer path is refused
+15–30 minute cadence. `vercel.json` registers a daily 03:00 UTC sweep that is
+compatible with Vercel Hobby; use a Pro schedule or an external scheduler for
+the recommended 15–30 minute cadence. Without `CRON_SECRET` set, the bearer path is refused
 outright — an unauthenticated endpoint that sends customer email is not
 something to leave open. An admin session also authorises it, which is how the
 "Retry failed" button in the notification log works.

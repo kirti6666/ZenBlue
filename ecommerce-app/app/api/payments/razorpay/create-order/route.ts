@@ -115,6 +115,7 @@ export async function POST(req: NextRequest) {
       let unitPrice = product.discountPrice ?? product.price;
       let availableStock = product.stock;
       let sku = product.sku ?? "";
+      let lineImage = product.images?.[0] ?? "";
 
       if (hasVariants) {
         if (!item.variant) {
@@ -135,6 +136,17 @@ export async function POST(req: NextRequest) {
         unitPrice = combo.price ?? unitPrice;
         availableStock = combo.stock;
         sku = combo.sku || sku;
+        const colourAttribute = product.variants.find((variant: any) =>
+          /colou?r/i.test(variant.name)
+        );
+        const colourImage = colourAttribute
+          ? product.variantCombinations.find(
+              (candidate: any) =>
+                candidate.combination.get(colourAttribute.name) ===
+                  item.variant?.[colourAttribute.name] && candidate.image
+            )?.image
+          : undefined;
+        lineImage = combo.image || colourImage || lineImage;
       }
 
       if (item.quantity < 1 || item.quantity > availableStock) {
@@ -155,7 +167,7 @@ export async function POST(req: NextRequest) {
         title: product.title,
         price: unitPrice,
         quantity: item.quantity,
-        image: product.images?.[0],
+        image: lineImage,
         variant: item.variant,
         hsnCode: product.hsnCode ?? "",
         gstRate: product.gstRate ?? null,

@@ -17,6 +17,7 @@ export default async function AdminReturnDetail({ params }: { params: { id: stri
   const [request, settings] = await Promise.all([
     ReturnRequest.findById(params.id)
       .populate("order", "orderNumber total paymentMethod paymentStatus shippingAddress createdAt")
+      .populate("replacementOrder", "orderNumber orderStatus paymentStatus total createdAt")
       .populate("user", "name email phone")
       .lean(),
     getSiteSettings(),

@@ -14,17 +14,16 @@ import {
 } from "lucide-react";
 import { whatsappLink } from "@/lib/site-settings";
 import { getSiteSettings } from "@/lib/site-settings";
-import { NewsletterForm } from "./NewsletterForm";
 import { PaymentIcons } from "./PaymentIcons";
 
 /**
  * Storefront footer — entirely driven by Site Settings (about text, link
- * columns, contact details, social links, newsletter copy, copyright).
+ * columns, contact details, social links and copyright).
  * Add/remove/reorder any of it from /admin/settings.
  */
 export async function Footer() {
   const settings = await getSiteSettings();
-  const { brand, footer, contact, social, newsletter, integrations } = settings;
+  const { brand, footer, contact, social, integrations } = settings;
 
   // WhatsApp sits alongside the social icons because, for a store whose traffic
   // arrives from Instagram and WhatsApp, it is a primary channel rather than an
@@ -130,19 +129,8 @@ export async function Footer() {
           ))}
         </div>
 
-        {/* Newsletter + contact */}
-        <div className="mt-4 grid gap-4 border-t border-line pt-4 text-left sm:mt-10 sm:gap-8 sm:pt-8 md:grid-cols-2 lg:grid-cols-3">
-          {newsletter.enabled && (
-            <div className="lg:col-span-1">
-              <p className="mb-0.5 text-sm font-medium text-heading sm:mb-1.5 sm:text-base">{newsletter.heading}</p>
-              {newsletter.subtext && <p className="mb-1.5 text-[11px] text-muted sm:mb-3 sm:text-sm">{newsletter.subtext}</p>}
-              <NewsletterForm
-                buttonText={newsletter.buttonText}
-                successMessage={newsletter.successMessage}
-              />
-            </div>
-          )}
-
+        {/* Contact + payment methods */}
+        <div className="mt-4 grid gap-4 border-t border-line pt-4 text-left sm:mt-10 sm:gap-8 sm:pt-8 md:grid-cols-2">
           {(supportEmail || contact.phone || contact.address || contact.businessHours) && (
             <div>
               <p className="eyebrow mb-1.5 sm:mb-3">Get in touch</p>

@@ -199,7 +199,12 @@ const OrderSchema = new Schema<IOrder>(
       default: [],
     },
 
-    isReplacementFor: { type: Schema.Types.ObjectId, ref: "ReturnRequest" },
+    isReplacementFor: {
+      type: Schema.Types.ObjectId,
+      ref: "ReturnRequest",
+      unique: true,
+      sparse: true,
+    },
     recoveredFromCart: { type: Schema.Types.ObjectId, ref: "AbandonedCart" },
   },
   { timestamps: true }

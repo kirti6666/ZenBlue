@@ -22,6 +22,7 @@ export default async function ReturnDetailPage({ params }: { params: { id: strin
   const [request, settings] = await Promise.all([
     ReturnRequest.findOne({ _id: params.id, user: user.id })
       .populate("order", "orderNumber total createdAt")
+      .populate("replacementOrder", "orderNumber orderStatus paymentStatus total createdAt")
       .lean(),
     getSiteSettings(),
   ]);
@@ -121,6 +122,24 @@ export default async function ReturnDetailPage({ params }: { params: { id: strin
 
         {/* Summary rail */}
         <aside className="space-y-4">
+          {r.replacementOrder && (
+            <div className="rounded-xl border border-primary/30 bg-surface p-6">
+              <p className="eyebrow mb-3">Replacement order</p>
+              <p className="text-sm font-medium text-heading">
+                {r.replacementOrder.orderNumber}
+              </p>
+              <p className="mt-1 text-xs capitalize text-muted">
+                {String(r.replacementOrder.orderStatus).replace(/_/g, " ")}
+              </p>
+              <Link
+                href={`/account/orders/${r.replacementOrder._id}`}
+                className="mt-3 inline-block text-sm text-link underline underline-offset-4"
+              >
+                View replacement order →
+              </Link>
+            </div>
+          )}
+
           <div className="rounded-xl border border-line bg-surface p-6">
             <p className="eyebrow mb-3">Summary</p>
             <dl className="space-y-2.5 text-sm">

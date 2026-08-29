@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Plus, X } from "lucide-react";
+import { ImageUploader } from "./ImageUploader";
 
 export interface VariantAttribute {
   name: string;
@@ -13,6 +14,7 @@ export interface VariantCombination {
   sku?: string;
   stock: number;
   price?: number;
+  image?: string;
 }
 
 interface VariantBuilderProps {
@@ -94,6 +96,25 @@ export function VariantBuilder({
     onCombinationsChange(updated);
   }
 
+  const colourAttribute = variants.find((variant) => /colou?r/i.test(variant.name));
+
+  function updateCombinationImage(index: number, image?: string) {
+    const source = combinations[index];
+    if (!colourAttribute) {
+      updateCombination(index, { image });
+      return;
+    }
+
+    const colour = source.combination[colourAttribute.name];
+    onCombinationsChange(
+      combinations.map((combination) =>
+        combination.combination[colourAttribute.name] === colour
+          ? { ...combination, image }
+          : combination
+      )
+    );
+  }
+
   return (
     <div className="space-y-4">
       <div>
@@ -152,6 +173,9 @@ export function VariantBuilder({
                   <th className="p-2 border-b">SKU</th>
                   <th className="p-2 border-b">Stock</th>
                   <th className="p-2 border-b">Price override</th>
+                  <th className="p-2 border-b">
+                    {colourAttribute ? "Colour image" : "Variant image"}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -193,6 +217,42 @@ export function VariantBuilder({
                         }
                         className="w-24 rounded border px-2 py-1"
                       />
+                    </td>
+                    <td className="min-w-28 p-2 align-top">
+                      {(() => {
+                        const colour = colourAttribute
+                          ? c.combination[colourAttribute.name]
+                          : undefined;
+                        const firstForColour = colourAttribute
+                          ? combinations.findIndex(
+                              (entry) =>
+                                entry.combination[colourAttribute.name] === colour
+                            ) === i
+                          : true;
+                        const colourImage = colourAttribute
+                          ? combinations.find(
+                              (entry) =>
+                                entry.combination[colourAttribute.name] === colour && entry.image
+                            )?.image
+                          : c.image;
+
+                        return firstForColour ? (
+                          <div className="w-24">
+                            <ImageUploader
+                              images={colourImage ? [colourImage] : []}
+                              maxImages={1}
+                              onChange={(images) => updateCombinationImage(i, images[0])}
+                            />
+                            {colourAttribute && (
+                              <p className="text-[10px] text-gray-400">
+                                Used for every {colour} size
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-xs text-gray-400">Uses {colour} image</span>
+                        );
+                      })()}
                     </td>
                   </tr>
                 ))}

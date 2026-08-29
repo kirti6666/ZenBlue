@@ -16,6 +16,7 @@ const REASON_LABELS: Record<string, string> = {
   return_restock: "Returned to stock",
   return_written_off: "Written off",
   exchange_reserved: "Reserved for exchange",
+  exchange_released: "Released replacement reservation",
   csv_import: "CSV import",
   erp_sync: "ERP sync",
   initial_stock: "Opening stock",
