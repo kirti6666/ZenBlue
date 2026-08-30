@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { Search, X } from "lucide-react";
+import { Search, SlidersHorizontal, X } from "lucide-react";
 
 interface Category {
   _id: string;
@@ -43,6 +43,7 @@ export function ShopFilters({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [search, setSearch] = useState(currentSearch ?? "");
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   function updateParam(key: string, value: string) {
     const params = new URLSearchParams(searchParams.toString());
@@ -63,6 +64,14 @@ export function ShopFilters({
   const hasFilters = Boolean(
     currentCategory || currentSearch || currentFabric || currentColour || currentSize || inStock
   );
+  const activeFilterCount = [
+    showCategory && currentCategory,
+    currentFabric,
+    currentColour,
+    currentSize,
+    inStock,
+    currentSort && currentSort !== "newest",
+  ].filter(Boolean).length;
 
   function clearFilters() {
     const params = new URLSearchParams();
@@ -72,23 +81,51 @@ export function ShopFilters({
   }
 
   return (
-    <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-2">
-      <form onSubmit={handleSearchSubmit} className="col-span-2 flex w-full gap-1.5 sm:w-auto">
-        <input
-          placeholder="Search products..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="h-9 min-w-0 flex-1 rounded-md border border-line bg-white px-3 text-xs outline-none focus:border-primary sm:h-10 sm:w-64 sm:rounded-lg sm:text-sm"
-        />
-        <button
-          type="submit"
-          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-surface text-heading transition-colors hover:border-primary sm:h-10 sm:w-auto sm:rounded-lg sm:px-4"
-          aria-label="Search products"
-        >
-          <Search size={17} />
-          <span className="sr-only sm:not-sr-only sm:ml-2 sm:text-xs sm:font-medium">Search</span>
-        </button>
-      </form>
+    <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center">
+      <div className="flex w-full sm:w-auto">
+        <form onSubmit={handleSearchSubmit} className="flex min-w-0 flex-1 overflow-hidden rounded-md border border-line bg-white focus-within:border-primary sm:contents">
+          <input
+            placeholder="Search products..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="h-9 min-w-0 flex-1 border-0 bg-transparent px-3 text-xs outline-none sm:h-10 sm:w-64 sm:rounded-lg sm:border sm:border-line sm:bg-white sm:text-sm sm:focus:border-primary"
+          />
+          <button
+            type="submit"
+            className="flex h-9 w-9 shrink-0 items-center justify-center border-l border-line bg-transparent text-heading transition-colors hover:text-primary sm:ml-1.5 sm:h-10 sm:w-auto sm:rounded-lg sm:border sm:bg-surface sm:px-4 sm:hover:border-primary"
+            aria-label="Search products"
+          >
+            <Search size={17} />
+            <span className="sr-only sm:not-sr-only sm:ml-2 sm:text-xs sm:font-medium">Search</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setFiltersOpen((open) => !open)}
+            aria-label="Refine filters"
+            aria-expanded={filtersOpen}
+            aria-controls="catalogue-refine-panel"
+            className={`relative inline-flex h-9 w-9 shrink-0 items-center justify-center border-l border-line transition-colors sm:hidden ${filtersOpen || activeFilterCount ? "text-primary" : "text-heading"}`}
+          >
+            <SlidersHorizontal size={16} />
+            {activeFilterCount > 0 && (
+              <span className="absolute right-0.5 top-0.5 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-primary px-0.5 text-[8px] font-semibold leading-none text-primary-foreground">
+                {activeFilterCount}
+              </span>
+            )}
+          </button>
+        </form>
+      </div>
+
+      <div
+        id="catalogue-refine-panel"
+        className={`${filtersOpen ? "grid" : "hidden"} grid-cols-2 gap-1.5 rounded-lg border border-line bg-surface p-2 sm:contents`}
+      >
+        <div className="col-span-2 flex items-center justify-between px-1 pb-0.5 sm:hidden">
+          <span className="text-[11px] font-semibold uppercase tracking-[0.14em] text-heading">Refine products</span>
+          <button type="button" onClick={() => setFiltersOpen(false)} aria-label="Close filters" className="inline-flex h-7 w-7 items-center justify-center rounded-full text-muted">
+            <X size={15} />
+          </button>
+        </div>
 
       {showCategory && <select
         value={currentCategory ?? ""}
@@ -135,6 +172,7 @@ export function ShopFilters({
       </select>
 
       {hasFilters && <button type="button" onClick={clearFilters} className="inline-flex h-9 items-center justify-center gap-1 rounded-md px-2 text-[11px] text-muted hover:text-heading sm:h-10 sm:text-xs"><X size={13}/> Clear</button>}
+      </div>
     </div>
   );
 }
