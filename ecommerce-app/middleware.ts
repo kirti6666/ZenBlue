@@ -4,7 +4,7 @@ import { verifyAccessToken, ACCESS_TOKEN_COOKIE } from "@/lib/auth";
 
 const ADMIN_PREFIX = "/admin";
 const ACCOUNT_PREFIX = "/account";
-const GUEST_ONLY_ROUTES = ["/login", "/register"];
+const GUEST_ONLY_ROUTES = ["/login", "/register", "/forgot-password", "/reset-password"];
 
 async function resolveRole(req: NextRequest): Promise<string | undefined> {
   // 1. Check NextAuth (Google OAuth) session — getToken is edge-compatible.
@@ -74,5 +74,7 @@ export const config = {
     "/account/:path*",
     "/login",
     "/register",
+    "/forgot-password",
+    "/reset-password",
   ],
 };

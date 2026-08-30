@@ -25,3 +25,5 @@ export { default as Subscriber } from "./Subscriber";
 export { default as BackInStockRequest } from "./BackInStockRequest";
 export { default as ContactMessage } from "./ContactMessage";
 export { default as ErpSkuMapping } from "./ErpSkuMapping";
+export { default as BlogPost } from "./BlogPost";
+export { default as PasswordResetToken } from "./PasswordResetToken";

@@ -80,7 +80,9 @@ export default async function ProductPage({ params }: { params: { slug: string }
     : [];
 
   const currency = settings.commerce.currencySymbol;
-  const sizeChart = findSizeChart(settings, product.sizeChartKey);
+  const sizeChart = product.sizeChart?.columns?.length && product.sizeChart?.rows?.length
+    ? { key: `product-${String(product._id)}`, ...product.sizeChart }
+    : findSizeChart(settings, product.sizeChartKey);
   const effectivePrice =
     product.discountPrice && product.discountPrice < product.price
       ? product.discountPrice

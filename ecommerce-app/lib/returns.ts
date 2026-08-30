@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { Order, ReturnRequest } from "@/models";
 import { financialYearOf } from "@/lib/invoice/settings";
 import type { SiteSettingsData } from "@/lib/site-settings";
+import { RETURN_WINDOW_DAYS } from "@/lib/return-policy";
 
 /**
  * Return / exchange domain rules.
@@ -93,13 +94,13 @@ export function checkReturnEligibility(
   }
 
   const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
-  const windowClosesAt = new Date(deliveredAt.getTime() + settings.returns.windowDays * 864e5);
+  const windowClosesAt = new Date(deliveredAt.getTime() + RETURN_WINDOW_DAYS * 864e5);
   if (Date.now() > windowClosesAt.getTime()) {
     return {
       eligible: false,
-      reason: `The ${settings.returns.windowDays}-day return window closed on ${windowClosesAt.toLocaleDateString(
+      reason: `The 7-day return and exchange window ended on ${windowClosesAt.toLocaleDateString(
         "en-IN"
-      )}`,
+      )}. Return and exchange options are no longer available for this order.`,
       returnableItems: empty,
       windowClosesAt,
     };

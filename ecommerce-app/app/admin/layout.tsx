@@ -3,10 +3,11 @@ import { getServerUser } from "@/lib/middleware/getServerUser";
 import { getSiteSettings } from "@/lib/site-settings";
 import { canAccessAdmin, hasPermission, PERMISSIONS, type Permission } from "@/lib/permissions";
 import { AdminShell } from "@/components/admin/AdminShell";
+import type { Metadata } from "next";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = { title: "Admin" };
+export const metadata: Metadata = { title: "Admin", robots: { index: false, follow: false } };
 
 /**
  * Admin navigation, in the order the shop is actually run: what came in today,
@@ -32,6 +33,7 @@ const NAV: { section: string; items: { href: string; label: string; permission: 
     items: [
       { href: "/admin/products", label: "Products", permission: PERMISSIONS.PRODUCTS },
       { href: "/admin/inventory", label: "Inventory", permission: PERMISSIONS.INVENTORY },
+      { href: "/admin/back-in-stock", label: "Back-in-stock requests", permission: PERMISSIONS.INVENTORY },
       { href: "/admin/categories", label: "Categories", permission: PERMISSIONS.CATEGORIES },
       { href: "/admin/reviews", label: "Reviews", permission: PERMISSIONS.REVIEWS },
     ],
@@ -59,6 +61,7 @@ const NAV: { section: string; items: { href: string; label: string; permission: 
     section: "Configure",
     items: [
       { href: "/admin/content", label: "Content & pages", permission: PERMISSIONS.CONTENT },
+      { href: "/admin/blogs", label: "Blog", permission: PERMISSIONS.CONTENT },
       { href: "/admin/staff", label: "Staff & permissions", permission: PERMISSIONS.STAFF },
       { href: "/admin/erp", label: "ERP sync", permission: PERMISSIONS.SETTINGS },
       { href: "/admin/settings", label: "Settings", permission: PERMISSIONS.SETTINGS },

@@ -2,6 +2,7 @@ import { connectDB } from "@/lib/db";
 import { SiteSettings } from "@/models";
 import { getPalette, type PaletteTokens } from "@/lib/theme";
 import { DEFAULT_MEGA_MENU_IMAGES } from "@/lib/site-settings-constants";
+import { RETURN_WINDOW_DAYS } from "@/lib/return-policy";
 export { MAX_HERO_SLIDES, DEFAULT_MEGA_MENU_IMAGES } from "@/lib/site-settings-constants";
 
 /**
@@ -248,7 +249,7 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   },
   announcement: {
     enabled: true,
-    text: "Enjoy free shipping on all orders above ₹1,499",
+    text: "Free shipping for all orders",
     link: "/shop",
   },
   home: {
@@ -429,7 +430,7 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   },
   contact: {
     email: "zenblueclothing@gmail.com",
-    supportEmail: "zenblueclothing@gmail.com",
+    supportEmail: "support@zenblue.in",
     phone: "+91 74878 59546",
     whatsapp: "917487859546",
     address: "",
@@ -467,12 +468,12 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   },
   returns: {
     enabled: true,
-    windowDays: 7,
+    windowDays: RETURN_WINDOW_DAYS,
     exchangeEnabled: true,
     storeCreditEnabled: true,
     storeCreditBonusPercent: 0,
     policySummary:
-      "Unworn, unwashed items with original tags can be returned or exchanged within 7 days of delivery. Reverse pickup is free.",
+      "Unworn, unwashed items with original tags are eligible for return or exchange. Reverse pickup is free.",
   },
   abandonedCart: {
     enabled: true,
@@ -575,7 +576,36 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
       const created = await SiteSettings.create({ singletonKey: "site", ...DEFAULT_SETTINGS });
       doc = created.toObject();
     }
-    return mergeSettings(DEFAULT_SETTINGS, doc as unknown);
+    const settings = mergeSettings(DEFAULT_SETTINGS, doc as unknown);
+    // The store's customer policy is a fixed seven-day window. Normalize old
+    // documents so a stale admin value can never leave the UI and API at odds.
+    if (settings.returns.windowDays !== RETURN_WINDOW_DAYS) {
+      settings.returns.windowDays = RETURN_WINDOW_DAYS;
+      await SiteSettings.updateOne(
+        { singletonKey: "site", "returns.windowDays": { $ne: RETURN_WINDOW_DAYS } },
+        { $set: { "returns.windowDays": RETURN_WINDOW_DAYS } }
+      );
+    }
+    // Return-policy copy belongs on product, order and policy screens, not in
+    // the announcement ribbon. Clean up older seeded/admin values once.
+    if (/returns?/i.test(settings.announcement.text)) {
+      const previousAnnouncement = settings.announcement.text;
+      settings.announcement.text = DEFAULT_SETTINGS.announcement.text;
+      await SiteSettings.updateOne(
+        { singletonKey: "site", "announcement.text": previousAnnouncement },
+        { $set: { "announcement.text": DEFAULT_SETTINGS.announcement.text } }
+      );
+    }
+    // Migrate the original seed inbox to the dedicated customer-support
+    // address. Admin-entered custom addresses are left untouched.
+    if (settings.contact.supportEmail === "zenblueclothing@gmail.com") {
+      settings.contact.supportEmail = "support@zenblue.in";
+      await SiteSettings.updateOne(
+        { singletonKey: "site", "contact.supportEmail": "zenblueclothing@gmail.com" },
+        { $set: { "contact.supportEmail": "support@zenblue.in" } }
+      );
+    }
+    return settings;
   } catch (err) {
     // Never let a settings/DB hiccup take down a page — fall back to defaults.
     console.error("getSiteSettings failed, using defaults:", err);

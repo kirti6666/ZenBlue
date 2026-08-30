@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/storefront/PageHeader";
 import { RichText } from "@/components/storefront/RichText";
 import { breadcrumbSchema, jsonLd } from "@/lib/seo";
 import { DEFAULT_CONTENT_PAGES } from "@/lib/content-defaults";
+import { RETURN_WINDOW_POLICY_PARAGRAPH } from "@/lib/return-policy";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,19 @@ export const dynamic = "force-dynamic";
 async function loadPage(slug: string) {
   await connectDB();
   const doc = await ContentPage.findOne({ slug, isPublished: true }).lean();
-  if (doc) return doc as any;
+  if (doc) {
+    const page = doc as any;
+    if (slug === "return-exchange-policy") {
+      const legacy =
+        "Requests must be raised within the return or exchange period displayed on the product page or at the time of purchase. Requests submitted after the applicable period may not be accepted.";
+      const body = String(page.body ?? "").replace(legacy, RETURN_WINDOW_POLICY_PARAGRAPH);
+      if (body !== page.body) {
+        await ContentPage.updateOne({ _id: page._id, body: page.body }, { $set: { body } });
+        page.body = body;
+      }
+    }
+    return page;
+  }
   return DEFAULT_CONTENT_PAGES.find((p) => p.slug === slug) ?? null;
 }
 

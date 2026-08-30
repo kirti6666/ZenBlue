@@ -8,6 +8,7 @@ import { SingleVideoUpload } from "@/components/admin/SingleVideoUpload";
 import type { SiteSettingsData } from "@/lib/site-settings";
 import { PALETTES, type PaletteKey } from "@/lib/theme";
 import { CardListSkeleton, Skeleton } from "@/components/ui/Skeleton";
+import { RETURN_WINDOW_STATEMENT } from "@/lib/return-policy";
 
 /* ------------------------------------------------------------------ *
  * Immutable nested-path helpers
@@ -1370,11 +1371,13 @@ export default function AdminSettingsPage() {
             onChange={(v) => set("returns.enabled", v)}
           />
           <div className="grid grid-cols-2 gap-4">
-            <NumberField
-              label="Return window (days after delivery)"
-              value={s.returns.windowDays}
-              onChange={(v) => set("returns.windowDays", v)}
-            />
+            <div>
+              <p className="mb-1 text-sm font-medium">Return window</p>
+              <div className="rounded-md border bg-gray-50 px-3 py-2 text-sm font-medium">
+                7 days after delivery
+              </div>
+              <p className="mt-1 text-xs text-gray-500">Fixed store policy</p>
+            </div>
             <NumberField
               label="Extra credit for choosing store credit (%)"
               value={s.returns.storeCreditBonusPercent}
@@ -1398,8 +1401,8 @@ export default function AdminSettingsPage() {
             rows={3}
           />
           <p className="text-sm text-gray-500">
-            The window runs from the delivery date, not the order date — a slow courier never eats
-            the customer&rsquo;s window. Keep the full policy page in sync under Content &amp; pages.
+            {RETURN_WINDOW_STATEMENT} The window runs from the delivery date, not the order date.
+            Keep the full policy page in sync under Content &amp; pages.
           </p>
 
           <section className="space-y-4 border-t pt-5">

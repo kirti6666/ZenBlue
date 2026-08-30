@@ -117,6 +117,7 @@ export default async function OrderDetailPage({ params }: { params: { id: string
         returnBlockedReason={eligibility.reason}
         returnWindowClosesAt={eligibility.windowClosesAt?.toISOString()}
         policySummary={settings.returns.policySummary}
+        exchangeEnabled={settings.returns.exchangeEnabled}
       />
 
       {isCancelled ? (

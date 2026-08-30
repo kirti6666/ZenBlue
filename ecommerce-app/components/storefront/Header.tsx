@@ -50,7 +50,7 @@ export async function Header() {
 
   return (
     <header className="sticky top-0 z-50 border-b border-line bg-background">
-      <div className="relative flex w-full items-center px-3 py-2.5 sm:px-5 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:gap-3 xl:px-10 xl:py-4 2xl:px-12">
+      <div className="relative flex w-full items-center px-3 py-2.5 sm:px-5 xl:grid xl:grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] xl:gap-10 xl:px-10 xl:py-4 2xl:gap-20 2xl:px-12">
         {/* LEFT — navigation on desktop, drawer trigger on mobile */}
         <div className="flex shrink-0 items-center justify-start xl:min-w-0 xl:shrink">
           <MobileNav
@@ -59,6 +59,9 @@ export async function Header() {
             accountHref={accountHref}
             storeName={brand.storeName}
           />
+          <div className="xl:hidden">
+            <SearchOverlay currencySymbol={commerce.currencySymbol} />
+          </div>
           <div className="hidden min-w-0 xl:block">
             <DesktopNav navLinks={header.navLinks} />
           </div>
@@ -76,7 +79,9 @@ export async function Header() {
 
         {/* RIGHT — search, account, cart */}
         <div className="ml-auto flex shrink-0 items-center justify-end xl:ml-0 xl:min-w-0">
-          <SearchOverlay currencySymbol={commerce.currencySymbol} />
+          <div className="hidden xl:block">
+            <SearchOverlay currencySymbol={commerce.currencySymbol} />
+          </div>
 
           <div className="hidden xl:block">
             <AccountMenu name={firstName} isStaff={isStaff} isLoggedIn={!!user} />
@@ -85,7 +90,7 @@ export async function Header() {
           <Link
             href={user ? "/account/wishlist" : "/login?callbackUrl=/account/wishlist"}
             aria-label="My wishlist"
-            className="hidden h-10 w-10 items-center justify-center rounded-full text-heading transition-colors hover:bg-surface-alt hover:text-link sm:flex"
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full text-heading transition-colors hover:bg-surface-alt hover:text-link"
           >
             <Heart size={19} strokeWidth={1.6} />
           </Link>

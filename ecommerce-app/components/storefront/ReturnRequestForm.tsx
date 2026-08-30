@@ -2,9 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { AlertCircle, Upload, X } from "lucide-react";
 import { RETURN_REASON_LABELS } from "@/lib/returns";
+import { RETURN_WINDOW_STATEMENT } from "@/lib/return-policy";
 
 interface ReturnableItem {
   index: number;
@@ -17,6 +19,12 @@ interface ReturnableItem {
   orderedQuantity: number;
   returnedQuantity: number;
   returnableQuantity: number;
+  exchangeOptions: {
+    variant: Record<string, string>;
+    variantKey: string;
+    stock: number;
+    image: string;
+  }[];
 }
 
 interface Eligibility {
@@ -31,18 +39,24 @@ interface Eligibility {
 
 export function ReturnRequestForm({ orderId }: { orderId: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [data, setData] = useState<Eligibility | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  const [type, setType] = useState<"return" | "exchange">("return");
+  const [type, setType] = useState<"return" | "exchange">(
+    searchParams.get("mode") === "exchange" ? "exchange" : "return"
+  );
   const [reason, setReason] = useState("size_fit_issue");
   const [comments, setComments] = useState("");
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   // Keyed by "productId::variantKey" so two sizes of the same product stay distinct.
   const [selected, setSelected] = useState<Record<string, number>>({});
+  const [exchangeSelections, setExchangeSelections] = useState<
+    Record<string, Record<string, string>>
+  >({});
 
   useEffect(() => {
     (async () => {
@@ -69,6 +83,12 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
       else next[key] = 1;
       return next;
     });
+    setExchangeSelections((prev) => {
+      if (!prev[key]) return prev;
+      const next = { ...prev };
+      delete next[key];
+      return next;
+    });
   }
 
   async function uploadImage(file: File) {
@@ -91,11 +111,31 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
     e.preventDefault();
     const items = Object.entries(selected).map(([key, quantity]) => {
       const [product, variantKey = ""] = key.split("::");
-      return { product, variantKey, quantity };
+      return {
+        product,
+        variantKey,
+        quantity,
+        exchangeVariant: type === "exchange" ? exchangeSelections[key] : undefined,
+      };
     });
 
     if (items.length === 0) {
       setError("Select at least one item to return");
+      return;
+    }
+    if (
+      type === "exchange" &&
+      items.some((request) => {
+        const item = data?.returnableItems.find(
+          (candidate) => candidate.product === request.product && candidate.variantKey === request.variantKey
+        );
+        const targetKey = request.exchangeVariant
+          ? Object.keys(request.exchangeVariant).sort().map((name) => `${name}:${request.exchangeVariant![name]}`).join(" / ")
+          : "";
+        return !item?.exchangeOptions.some((option) => option.variantKey === targetKey && option.stock >= request.quantity);
+      })
+    ) {
+      setError("Choose an available replacement size and colour for every selected item");
       return;
     }
 
@@ -142,7 +182,10 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
 
   return (
     <form onSubmit={submit} className="space-y-6">
-      <p className="rounded-lg bg-surface-alt p-4 text-sm text-body">{data.policySummary}</p>
+      <div className="rounded-lg bg-surface-alt p-4 text-sm text-body">
+        <p>{data.policySummary}</p>
+        <p className="mt-2 font-medium text-heading">{RETURN_WINDOW_STATEMENT}</p>
+      </div>
 
       {/* Type */}
       {data.exchangeEnabled && (
@@ -165,7 +208,7 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
                   className="sr-only"
                 />
                 <span className="block font-medium text-heading">
-                  {t === "return" ? "Return for a refund" : "Exchange for another size"}
+                  {t === "return" ? "Return for a refund" : "Exchange size or colour"}
                 </span>
                 <span className="mt-0.5 block text-xs text-muted">
                   {t === "return"
@@ -233,6 +276,42 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
                           ))}
                         </select>
                       </label>
+                    )}
+
+                    {isSelected && type === "exchange" && (
+                      <div className="mt-3 rounded-lg border border-line bg-surface-alt p-3">
+                        <p className="text-xs font-semibold text-heading">Choose your replacement</p>
+                        {item.exchangeOptions.length === 0 ? (
+                          <p className="mt-1 text-xs text-error">No alternative size or colour is currently in stock.</p>
+                        ) : (
+                          <div className="mt-2 space-y-2.5">
+                            {[...new Set(item.exchangeOptions.flatMap((option) => Object.keys(option.variant)))].map((attribute) => {
+                              const choice = exchangeSelections[key] ?? {};
+                              const values = [...new Set(item.exchangeOptions.map((option) => option.variant[attribute]).filter(Boolean))];
+                              return (
+                                <div key={attribute}>
+                                  <span className="text-[11px] font-medium text-muted">{attribute}</span>
+                                  <div className="mt-1 flex flex-wrap gap-1.5">
+                                    {values.map((value) => {
+                                      const available = item.exchangeOptions.some((option) =>
+                                        option.stock >= (selected[key] ?? 1) &&
+                                        option.variant[attribute] === value &&
+                                        Object.entries(choice).every(([name, selectedValue]) => name === attribute || option.variant[name] === selectedValue)
+                                      );
+                                      const active = choice[attribute] === value;
+                                      return (
+                                        <button key={value} type="button" disabled={!available} onClick={() => setExchangeSelections((prev) => ({ ...prev, [key]: { ...(prev[key] ?? {}), [attribute]: value } }))} className={`rounded-md border px-2.5 py-1.5 text-xs transition ${active ? "border-primary bg-primary text-primary-foreground" : available ? "border-line bg-surface text-heading hover:border-primary" : "cursor-not-allowed border-line text-muted opacity-40"}`}>
+                                          {value}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -302,7 +381,7 @@ export function ReturnRequestForm({ orderId }: { orderId: string }) {
         </div>
       </fieldset>
 
-      {selectedCount > 0 && (
+      {selectedCount > 0 && type === "return" && (
         <div className="rounded-xl border border-line bg-surface-alt p-4 text-sm">
           <div className="flex justify-between">
             <span className="text-muted">Estimated refund</span>

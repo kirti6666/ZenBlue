@@ -3,7 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { RotateCcw, XCircle } from "lucide-react";
+import { RefreshCw, RotateCcw, XCircle } from "lucide-react";
+import { RETURN_WINDOW_STATEMENT } from "@/lib/return-policy";
 
 /**
  * Return and cancel controls for a customer's own order.
@@ -20,6 +21,7 @@ export function OrderActions({
   returnBlockedReason,
   returnWindowClosesAt,
   policySummary,
+  exchangeEnabled,
 }: {
   orderId: string;
   orderNumber: string;
@@ -28,6 +30,7 @@ export function OrderActions({
   returnBlockedReason?: string;
   returnWindowClosesAt?: string;
   policySummary: string;
+  exchangeEnabled: boolean;
 }) {
   const router = useRouter();
   const [confirming, setConfirming] = useState(false);
@@ -57,13 +60,17 @@ export function OrderActions({
       {canReturn && (
         <>
           <p className="mb-2 text-sm text-gray-600">{policySummary}</p>
-          <Link
-            href={`/account/returns/new?orderId=${orderId}`}
-            className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground"
-          >
-            <RotateCcw size={15} />
-            Request a return or exchange
-          </Link>
+          <p className="mb-3 text-xs text-gray-500">{RETURN_WINDOW_STATEMENT}</p>
+          <div className="flex flex-wrap gap-2">
+            <Link href={`/account/returns/new?orderId=${orderId}&mode=return`} className="inline-flex items-center gap-2 rounded-md border border-primary px-4 py-2.5 text-sm font-medium text-primary">
+              <RotateCcw size={15} /> Return
+            </Link>
+            {exchangeEnabled && (
+              <Link href={`/account/returns/new?orderId=${orderId}&mode=exchange`} className="inline-flex items-center gap-2 rounded-md bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground">
+                <RefreshCw size={15} /> Exchange size or colour
+              </Link>
+            )}
+          </div>
           {returnWindowClosesAt && (
             <p className="mt-2 text-xs text-gray-500">
               Window closes{" "}

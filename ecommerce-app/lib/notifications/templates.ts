@@ -126,6 +126,25 @@ export interface OrderMessageContext {
 }
 
 export const messages = {
+  welcome: (c: OrderMessageContext): RenderedMessage => ({
+    email: {
+      subject: `Welcome to ${c.storeName}`,
+      html: emailShell({
+        storeName: c.storeName,
+        heading: `Welcome, ${c.customerName.split(" ")[0]}.`,
+        intro: `Your ${c.storeName} account is ready. You can now save favourites, manage addresses, follow orders and request returns or exchanges from one place.`,
+        ctaText: "Visit my account",
+        ctaUrl: c.orderUrl,
+        footerNote: c.supportEmail ? `Need help? Write to ${c.supportEmail}.` : undefined,
+      }),
+    },
+    whatsapp: { templateName: wa("WELCOME"), bodyParams: [c.customerName] },
+    sms: {
+      templateId: dlt("WELCOME"),
+      variables: { name: c.customerName },
+      text: `Welcome to ${c.storeName}, ${c.customerName}. Your account is ready.`,
+    },
+  }),
   order_placed: (c: OrderMessageContext): RenderedMessage => ({
     email: {
       subject: `Order ${c.orderNumber} confirmed · ${c.storeName}`,

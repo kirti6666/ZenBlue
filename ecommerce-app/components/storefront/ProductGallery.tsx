@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Play } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { cloudinaryUrl, cloudinarySrcSet, IMAGE_SIZES } from "@/lib/image";
 import { videoPoster, type MediaItem } from "@/lib/media";
 
@@ -24,7 +24,27 @@ export function ProductGallery({
   saleBadge?: string;
 }) {
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const touchStart = useRef<number | null>(null);
   const current = media[active];
+
+  function move(delta: number) {
+    setActive((index) => (index + delta + media.length) % media.length);
+  }
+
+  useEffect(() => {
+    if (media.length < 2 || paused || current?.type === "video") return;
+    const timer = window.setInterval(() => {
+      setActive((index) => {
+        for (let step = 1; step <= media.length; step += 1) {
+          const candidate = (index + step) % media.length;
+          if (media[candidate]?.type === "image") return candidate;
+        }
+        return index;
+      });
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [current?.type, media, paused]);
 
   if (!current) {
     return (
@@ -35,8 +55,17 @@ export function ProductGallery({
   }
 
   return (
-    <div>
-      <div className="relative aspect-[4/5] overflow-hidden rounded-xl bg-surface-alt">
+    <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}>
+      <div
+        className="relative aspect-[4/5] touch-pan-y overflow-hidden rounded-xl bg-surface-alt"
+        onTouchStart={(event) => { touchStart.current = event.touches[0]?.clientX ?? null; setPaused(true); }}
+        onTouchEnd={(event) => {
+          const end = event.changedTouches[0]?.clientX;
+          if (touchStart.current != null && end != null && Math.abs(end - touchStart.current) > 45) move(end < touchStart.current ? 1 : -1);
+          touchStart.current = null;
+          setPaused(false);
+        }}
+      >
         {current.type === "video" ? (
           <video
             key={current.url}
@@ -58,6 +87,20 @@ export function ProductGallery({
             fetchPriority={active === 0 ? "high" : "auto"}
             className="h-full w-full object-cover"
           />
+        )}
+
+        {media.length > 1 && (
+          <>
+            <button type="button" onClick={() => move(-1)} aria-label="Previous product image" className="absolute left-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/50 bg-surface/90 text-heading shadow-sm transition hover:bg-surface">
+              <ChevronLeft size={19} />
+            </button>
+            <button type="button" onClick={() => move(1)} aria-label="Next product image" className="absolute right-2 top-1/2 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/50 bg-surface/90 text-heading shadow-sm transition hover:bg-surface">
+              <ChevronRight size={19} />
+            </button>
+            <span className="absolute bottom-2.5 right-2.5 rounded-full bg-black/55 px-2 py-1 text-[10px] font-medium text-white">
+              {active + 1} / {media.length}
+            </span>
+          </>
         )}
 
         {saleBadge && current.type === "image" && (

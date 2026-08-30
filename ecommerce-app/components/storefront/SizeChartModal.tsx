@@ -36,7 +36,7 @@ export function SizeChartModal({ chart }: { chart: SizeChart }) {
         className="inline-flex items-center gap-1.5 text-xs text-link underline underline-offset-4"
       >
         <Ruler size={13} />
-        Size guide
+        Size chart
       </button>
 
       {open && (

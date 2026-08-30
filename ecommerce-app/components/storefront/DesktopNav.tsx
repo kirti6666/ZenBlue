@@ -61,7 +61,7 @@ export function DesktopNav({ navLinks }: { navLinks: NavLink[] }) {
       aria-label="Main"
       onMouseEnter={cancelScheduledClose}
       onMouseLeave={scheduleClose}
-      className="hidden items-center gap-3 xl:flex 2xl:gap-5"
+      className="hidden items-center gap-2 xl:flex 2xl:gap-3"
     >
       {navLinks.map((link) => {
         const children = link.children ?? [];
@@ -82,7 +82,7 @@ export function DesktopNav({ navLinks }: { navLinks: NavLink[] }) {
               // whitespace-nowrap is load-bearing: "T SHIRTS" and "BULK ORDERS"
               // wrap onto two lines without it, which breaks the header's
               // baseline and pushes the row taller than the logo.
-                className="inline-flex items-center gap-1 whitespace-nowrap py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-heading transition-colors hover:text-link 2xl:text-[11px] 2xl:tracking-[0.1em]"
+                className="inline-flex items-center gap-0.5 whitespace-nowrap py-1.5 text-[10px] font-medium uppercase tracking-[0.06em] text-heading transition-colors hover:text-link 2xl:tracking-[0.07em]"
                 aria-haspopup="menu"
                 aria-expanded={openLabel === link.label}
                 aria-controls={`desktop-menu-${link.label.replace(/\s+/g, "-").toLowerCase()}`}
@@ -96,7 +96,7 @@ export function DesktopNav({ navLinks }: { navLinks: NavLink[] }) {
             ) : (
               <Link
                 href={link.href || "#"}
-                className="inline-flex items-center whitespace-nowrap py-2 text-[10px] font-medium uppercase tracking-[0.08em] text-heading transition-colors hover:text-link 2xl:text-[11px] 2xl:tracking-[0.1em]"
+                className="inline-flex items-center whitespace-nowrap py-1.5 text-[10px] font-medium uppercase tracking-[0.06em] text-heading transition-colors hover:text-link 2xl:tracking-[0.07em]"
               >
                 {link.label}
               </Link>

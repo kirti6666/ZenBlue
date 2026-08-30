@@ -90,7 +90,7 @@ export function SearchBar({ currencySymbol = "₹" }: { currencySymbol?: string 
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={() => results.length && setOpen(true)}
-          placeholder="Search t-shirts, polos, streetwear…"
+          placeholder="Search products…"
           autoComplete="off"
           className="w-full rounded-full border border-line bg-surface py-2 pl-9 pr-9 text-sm text-heading placeholder:text-muted focus:border-primary"
         />

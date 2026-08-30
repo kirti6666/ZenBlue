@@ -13,6 +13,25 @@ const variantCombinationSchema = z.object({
   image: z.string().optional(),
 });
 
+const productSizeChartSchema = z
+  .object({
+    title: z.string().trim().min(1, "Size chart title is required"),
+    unitNote: z.string().trim().optional(),
+    columns: z.array(z.string().trim().min(1)).min(2, "Add at least two chart columns"),
+    rows: z.array(z.array(z.string().trim())).min(1, "Add at least one size row"),
+  })
+  .superRefine((chart, ctx) => {
+    chart.rows.forEach((row, index) => {
+      if (row.length !== chart.columns.length) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: `Size chart row ${index + 1} must have ${chart.columns.length} cells`,
+          path: ["rows", index],
+        });
+      }
+    });
+  });
+
 export const productSchema = z.object({
   title: z.string().trim().min(2, "Title is required"),
   description: z.string().trim().min(10, "Description must be at least 10 characters"),
@@ -48,6 +67,7 @@ export const productSchema = z.object({
   fitType: z.string().optional(),
   videoUrl: z.string().optional(),
   sizeChartKey: z.string().optional(),
+  sizeChart: productSizeChartSchema.nullable().optional(),
   weightKg: z.number().min(0).optional(),
   packageLengthCm: z.number().min(0).optional(),
   packageBreadthCm: z.number().min(0).optional(),

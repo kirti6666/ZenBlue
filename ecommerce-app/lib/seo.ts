@@ -36,6 +36,7 @@ export function siteUrl(): string {
 
 /** Absolute URL for a site-relative path. */
 export function absoluteUrl(path: string): string {
+  if (/^https?:\/\//i.test(path)) return path;
   return `${siteUrl()}${path.startsWith("/") ? path : `/${path}`}`;
 }
 
@@ -76,7 +77,7 @@ export function productSchema(opts: {
     "@type": "Product",
     name: opts.name,
     description: opts.description,
-    image: opts.images,
+    image: opts.images.map(absoluteUrl),
     ...(opts.sku ? { sku: opts.sku } : {}),
     brand: { "@type": "Brand", name: opts.brand },
     offers: {

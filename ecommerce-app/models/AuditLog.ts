@@ -45,6 +45,7 @@ export type AuditTargetType =
   | "CreditNote"
   | "ContentPage"
   | "Faq"
+  | "BlogPost"
   | "Wallet";
 
 export interface IAuditLog {

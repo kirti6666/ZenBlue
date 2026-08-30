@@ -6,6 +6,7 @@ import Link from "next/link";
 import { getProviders, signIn } from "next-auth/react";
 import { ShieldCheck } from "lucide-react";
 import { OtpLoginForm } from "@/components/storefront/OtpLoginForm";
+import { PasswordInput } from "@/components/ui/PasswordInput";
 
 /**
  * Sign-in, with three paths: password, one-time code, and Google.
@@ -231,17 +232,19 @@ function LoginForm() {
             className="w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm text-heading"
           />
         </label>
-        <label className="block">
-          <span className="mb-1.5 block text-sm font-medium text-heading">Password</span>
-          <input
-            type="password"
-            required
-            autoComplete="current-password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-sm text-heading"
-          />
-        </label>
+        <PasswordInput
+          id="login-password"
+          label="Password"
+          labelAction={
+            <Link href="/forgot-password" className="text-xs text-link underline underline-offset-4">
+              Forgot password?
+            </Link>
+          }
+          required
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
 
         {error && <p className="text-sm text-error">{error}</p>}
 

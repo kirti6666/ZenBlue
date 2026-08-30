@@ -187,7 +187,8 @@ const ReturnsSchema = new Schema(
     /** Shown on the order page above the "Request return" button. */
     policySummary: {
       type: String,
-      default: "Unworn items with tags intact can be returned within 7 days of delivery.",
+      default:
+        "Unworn, unwashed items with original tags are eligible for return or exchange. Reverse pickup is free.",
     },
   },
   { _id: false }

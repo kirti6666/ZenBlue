@@ -6,6 +6,7 @@ import { requireAdmin } from "@/lib/middleware/requireAdmin";
 import { PERMISSIONS } from "@/lib/permissions";
 import { logAdminAction, getClientIp } from "@/lib/middleware/logAdminAction";
 import { getSiteSettings } from "@/lib/site-settings";
+import { RETURN_WINDOW_DAYS } from "@/lib/return-policy";
 
 /**
  * Force this route to run on the server for EVERY request.
@@ -43,6 +44,7 @@ export async function PUT(req: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.issues[0].message }, { status: 400 });
     }
+    parsed.data.returns.windowDays = RETURN_WINDOW_DAYS;
 
     await connectDB();
 

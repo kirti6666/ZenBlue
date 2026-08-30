@@ -40,6 +40,15 @@ export async function Footer() {
 
   const copyright = (footer.copyrightText || "").replace("{year}", String(new Date().getFullYear()));
   const supportEmail = contact.supportEmail || contact.email;
+  const hasBlogLink = footer.columns.some((column) => column.links.some((link) => link.href === "/blog"));
+  const helpColumnIndex = footer.columns.findIndex((column) => column.title.toLowerCase() === "help");
+  const blogColumnIndex = helpColumnIndex >= 0 ? helpColumnIndex : 0;
+  const footerColumns = footer.columns.map((column, index) => ({
+    ...column,
+    links: !hasBlogLink && index === blogColumnIndex
+      ? [...column.links, { label: "Blog", href: "/blog" }]
+      : column.links,
+  }));
 
   return (
     <footer className="mt-8 border-t border-line bg-surface-alt sm:mt-16">
@@ -95,7 +104,7 @@ export async function Footer() {
           </div>
 
           {/* Link columns */}
-          {footer.columns.map((col, i) => (
+          {footerColumns.map((col, i) => (
             <div key={i} className="contents">
               <details className="group col-span-2 border-t border-line sm:hidden">
                 <summary className="flex cursor-pointer list-none items-center justify-between py-2.5 font-display text-sm font-semibold text-heading [&::-webkit-details-marker]:hidden">

@@ -46,6 +46,14 @@ export default async function AdminInventoryPage() {
       <AdminPageHeader
         title="Inventory"
         description="Stock levels per variant, low-stock alerts, and the full adjustment log."
+        actions={
+          <Link
+            href="/admin/back-in-stock"
+            className="rounded-lg border border-line bg-surface px-4 py-2 text-sm font-medium text-heading hover:border-primary"
+          >
+            Back-in-stock requests
+          </Link>
+        }
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-3">

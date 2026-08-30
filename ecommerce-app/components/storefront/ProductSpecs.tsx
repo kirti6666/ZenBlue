@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { RETURN_WINDOW_STATEMENT } from "@/lib/return-policy";
 
 /**
  * Fabric, care and delivery detail, as collapsible panels below the buy box.
@@ -42,7 +43,7 @@ export function ProductSpecs({
     {
       key: "delivery",
       title: "Delivery & returns",
-      body: `Estimated delivery: ${estimatedDelivery}.\n${returnPolicy}`,
+      body: `Estimated delivery: ${estimatedDelivery}.\n${returnPolicy}\n${RETURN_WINDOW_STATEMENT}`,
     },
   ].filter(Boolean) as { key: string; title: string; body: string }[];
 

@@ -32,8 +32,8 @@ function secret(name: "JWT_ACCESS_SECRET" | "JWT_REFRESH_SECRET"): Uint8Array {
   return new TextEncoder().encode(value);
 }
 
-const ACCESS_TOKEN_EXPIRY = "15m";
-const REFRESH_TOKEN_EXPIRY = "7d";
+const ACCESS_TOKEN_EXPIRY = "30d";
+const REFRESH_TOKEN_EXPIRY = "180d";
 
 export interface JWTPayload {
   userId: string;
@@ -85,7 +85,7 @@ export const accessCookieOptions = {
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
-  maxAge: 60 * 15, // 15 minutes, matches ACCESS_TOKEN_EXPIRY
+  maxAge: 60 * 60 * 24 * 30, // 30 days, matches ACCESS_TOKEN_EXPIRY
 };
 
 export const refreshCookieOptions = {
@@ -93,5 +93,5 @@ export const refreshCookieOptions = {
   secure: process.env.NODE_ENV === "production",
   sameSite: "lax" as const,
   path: "/",
-  maxAge: 60 * 60 * 24 * 7, // 7 days, matches REFRESH_TOKEN_EXPIRY
+  maxAge: 60 * 60 * 24 * 180, // six months, matches REFRESH_TOKEN_EXPIRY
 };

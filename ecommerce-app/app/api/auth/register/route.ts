@@ -11,6 +11,8 @@ import {
   accessCookieOptions,
   refreshCookieOptions,
 } from "@/lib/auth";
+import { notify } from "@/lib/notifications/dispatch";
+import { absoluteUrl } from "@/lib/seo";
 
 export async function POST(req: NextRequest) {
   try {
@@ -24,7 +26,7 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    const { name, email, password } = parsed.data;
+    const { name, email, password, dob } = parsed.data;
 
     await connectDB();
 
@@ -46,6 +48,7 @@ export async function POST(req: NextRequest) {
       password: hashedPassword,
       provider: "credentials",
       role: "customer",
+      dob,
     });
 
     const payload = {
@@ -61,6 +64,18 @@ export async function POST(req: NextRequest) {
     });
     res.cookies.set(ACCESS_TOKEN_COOKIE, accessToken, accessCookieOptions);
     res.cookies.set(REFRESH_TOKEN_COOKIE, refreshToken, refreshCookieOptions);
+
+    await notify({
+      event: "welcome",
+      force: true,
+      recipient: { email: user.email, userId: user._id.toString() },
+      context: {
+        customerName: user.name,
+        orderNumber: "",
+        orderUrl: absoluteUrl("/account"),
+        total: 0,
+      },
+    });
 
     return res;
   } catch (err) {

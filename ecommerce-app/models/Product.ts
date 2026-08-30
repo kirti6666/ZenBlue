@@ -13,6 +13,13 @@ export interface IVariantCombination {
   image?: string;
 }
 
+export interface IProductSizeChart {
+  title: string;
+  unitNote?: string;
+  columns: string[];
+  rows: string[][];
+}
+
 export interface IProduct {
   _id: string;
   title: string;
@@ -41,6 +48,8 @@ export interface IProduct {
   media?: { type: "image" | "video"; url: string; poster?: string; alt?: string }[];
   /** Slug of the size chart to show on the PDP (see SiteSettings.sizeCharts). */
   sizeChartKey?: string;
+  /** Product-specific chart. When present it overrides the shared chart key. */
+  sizeChart?: IProductSizeChart | null;
   /** Dead weight in kg — courier rate calculation uses max(dead, volumetric). */
   weightKg?: number;
   packageLengthCm?: number;
@@ -80,6 +89,16 @@ const VariantCombinationSchema = new Schema<IVariantCombination>(
     stock: { type: Number, required: true, default: 0 },
     price: { type: Number },
     image: { type: String },
+  },
+  { _id: false }
+);
+
+const ProductSizeChartSchema = new Schema<IProductSizeChart>(
+  {
+    title: { type: String, required: true, trim: true },
+    unitNote: { type: String, default: "" },
+    columns: [{ type: String, required: true }],
+    rows: [[{ type: String, required: true }]],
   },
   { _id: false }
 );
@@ -127,6 +146,7 @@ const ProductSchema = new Schema<IProduct>(
       default: [],
     },
     sizeChartKey: { type: String, default: "" },
+    sizeChart: { type: ProductSizeChartSchema, default: undefined },
     weightKg: { type: Number, default: 0.3 },
     packageLengthCm: { type: Number, default: 0 },
     packageBreadthCm: { type: Number, default: 0 },

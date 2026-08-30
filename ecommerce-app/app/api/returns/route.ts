@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { connectDB } from "@/lib/db";
-import { Order, ReturnRequest } from "@/models";
+import { Order, Product, ReturnRequest } from "@/models";
 import { getCurrentUser } from "@/lib/middleware/requireAuth";
 import { requireAdmin } from "@/lib/middleware/requireAdmin";
 import { getSiteSettings } from "@/lib/site-settings";
@@ -14,7 +14,7 @@ import {
   pushTimeline,
   syncOrderReturnedQuantities,
 } from "@/lib/returns";
-import { variantKey as toVariantKey } from "@/lib/inventory";
+import { stockForVariant, variantKey as toVariantKey } from "@/lib/inventory";
 
 // Reads cookies/query params per request — never statically rendered.
 export const dynamic = "force-dynamic";
@@ -97,6 +97,29 @@ export async function POST(req: NextRequest) {
           { error: `You can return at most ${line.returnableQuantity} of "${line.title}"` },
           { status: 400 }
         );
+      }
+
+      if (parsed.data.type === "exchange") {
+        if (!requested.exchangeVariant || Object.keys(requested.exchangeVariant).length === 0) {
+          return NextResponse.json(
+            { error: `Choose a replacement size and colour for "${line.title}"` },
+            { status: 400 }
+          );
+        }
+        const targetKey = toVariantKey(requested.exchangeVariant);
+        if (targetKey === line.variantKey) {
+          return NextResponse.json(
+            { error: `Choose a different size or colour for "${line.title}"` },
+            { status: 400 }
+          );
+        }
+        const product = await Product.findOne({ _id: line.product, isActive: true }).lean<any>();
+        if (!product || stockForVariant(product, targetKey) < requested.quantity) {
+          return NextResponse.json(
+            { error: `The selected replacement for "${line.title}" is no longer available` },
+            { status: 409 }
+          );
+        }
       }
 
       items.push({

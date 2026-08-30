@@ -75,6 +75,37 @@ h1, h2, h3, h4, h5, h6 {
   animation-play-state: paused;
 }
 
+/* Product cards request their second image only on devices that genuinely
+   support hover. This preserves the gallery preview on desktop without making
+   touch devices download a hidden second image for every product. */
+.product-card-primary,
+.product-card-secondary {
+  transition: opacity 400ms ease, transform 500ms ease;
+}
+
+.product-card-secondary {
+  opacity: 0;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .group:hover .product-card-primary {
+    transform: scale(1.04);
+  }
+
+  .group:hover .product-card-primary--swap {
+    opacity: 0;
+  }
+
+  .group:hover .product-card-secondary {
+    opacity: 1;
+    transform: scale(1.04);
+  }
+
+  .group:hover .product-card-secondary--sold-out {
+    opacity: 0.6;
+  }
+}
+
 /* Native form controls should follow the palette rather than the OS default. */
 input, select, textarea {
   background-color: var(--surface);

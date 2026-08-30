@@ -25,6 +25,7 @@ export type Channel = (typeof CHANNELS)[number];
 
 /** Maps an event to the toggle group that governs it. */
 const EVENT_TOGGLE: Record<MessageKey, keyof SiteSettingsData["notifications"]> = {
+  welcome: "orderPlaced",
   order_placed: "orderPlaced",
   payment_confirmed: "paymentConfirmed",
   order_confirmed: "orderConfirmed",

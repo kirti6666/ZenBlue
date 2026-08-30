@@ -190,7 +190,7 @@ export function BulkEnquiryForm({
         <label className="block sm:col-span-2">
           <span className={LABEL}>What are you looking for?</span>
           <input
-            placeholder="Kurta sets, linen shirts, Nehru jackets…"
+            placeholder="Describe the products you need"
             value={values.productInterest}
             onChange={(e) => update("productInterest", e.target.value)}
             className={FIELD}
@@ -242,7 +242,7 @@ export function BulkEnquiryForm({
         <label className="block sm:col-span-2">
           <span className={LABEL}>Branding or customisation</span>
           <input
-            placeholder="Embroidered logo on the chest, custom labels, gift packaging…"
+            placeholder="Describe any branding or customisation requirements"
             value={values.customisation}
             onChange={(e) => update("customisation", e.target.value)}
             className={FIELD}

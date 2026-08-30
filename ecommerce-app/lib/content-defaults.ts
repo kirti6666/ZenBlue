@@ -134,7 +134,7 @@ ZEN BLUE accepts eligible returns or exchanges only when the product meets the c
 
 ## 2. Return / exchange window
 
-Requests must be raised within the return or exchange period displayed on the product page or at the time of purchase. Requests submitted after the applicable period may not be accepted.
+Requests must be raised within 7 days of delivery. After 7 days, the return or exchange option is no longer available for the order.
 
 ## 3. Product condition
 
@@ -417,7 +417,7 @@ export const DEFAULT_FAQS: DefaultFaq[] = [
     sortOrder: 1,
     question: "What is the return or exchange policy?",
     answer:
-      "Return and exchange eligibility depends on the product and the policy applicable to your order. Please check the current Returns & Exchanges page before making a request.",
+      "Eligible items can be returned or exchanged within 7 days of delivery. After 7 days, the return or exchange option is no longer available. Items must be unused, unwashed and have their original tags.",
   },
   {
     category: "Returns",

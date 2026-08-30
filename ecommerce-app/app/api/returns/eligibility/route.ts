@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
 import { connectDB } from "@/lib/db";
-import { Order, ReturnRequest } from "@/models";
+import { Order, Product, ReturnRequest } from "@/models";
 import { getCurrentUser } from "@/lib/middleware/requireAuth";
 import { getSiteSettings } from "@/lib/site-settings";
 import { checkReturnEligibility } from "@/lib/returns";
+import { variantKey } from "@/lib/inventory";
+
+function asVariant(value: unknown): Record<string, string> {
+  if (!value) return {};
+  if (value instanceof Map) return Object.fromEntries(value);
+  return { ...(value as Record<string, string>) };
+}
 
 // Reads cookies/query params per request — never statically rendered.
 export const dynamic = "force-dynamic";
@@ -30,9 +37,33 @@ export async function GET(req: NextRequest) {
 
     const existing = await ReturnRequest.find({ order: orderId }).lean();
     const result = checkReturnEligibility(order, settings, existing);
+    const products = await Product.find({
+      _id: { $in: result.returnableItems.map((item) => item.product) },
+      isActive: true,
+    })
+      .select("variantCombinations")
+      .lean<any[]>();
+    const byId = new Map(products.map((product) => [String(product._id), product]));
+    const returnableItems = result.returnableItems.map((item) => {
+      const product = byId.get(item.product);
+      const exchangeOptions = (product?.variantCombinations ?? [])
+        .filter((entry: any) => Number(entry.stock) > 0)
+        .map((entry: any) => {
+          const variant = asVariant(entry.combination);
+          return {
+            variant,
+            variantKey: variantKey(variant),
+            stock: Number(entry.stock),
+            image: entry.image || item.image,
+          };
+        })
+        .filter((entry: any) => entry.variantKey && entry.variantKey !== item.variantKey);
+      return { ...item, exchangeOptions };
+    });
 
     return NextResponse.json({
       ...result,
+      returnableItems,
       policySummary: settings.returns.policySummary,
       exchangeEnabled: settings.returns.exchangeEnabled,
       storeCreditEnabled: settings.returns.storeCreditEnabled,

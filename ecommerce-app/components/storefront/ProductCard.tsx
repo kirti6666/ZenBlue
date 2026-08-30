@@ -56,6 +56,10 @@ export function ProductCard({ product, currency = "₹", priority = false }: Pro
   // always the back or a detail shot, which answers the question a shopper
   // would otherwise open the product page to ask.
   const secondary = stills[1];
+  const secondarySrcSet = secondary
+    ? cloudinarySrcSet(secondary, [160, 240, 320, 480, 640], { quality: "auto:eco" }) ??
+      cloudinaryUrl(secondary, { width: 480, quality: "auto:eco" })
+    : undefined;
   const colors =
     product.variants?.find((variant) => /colou?r/i.test(variant.name))?.options.filter(Boolean) ?? [];
 
@@ -83,40 +87,41 @@ export function ProductCard({ product, currency = "₹", priority = false }: Pro
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src={cloudinaryUrl(primary, { width: 600 })}
-              srcSet={cloudinarySrcSet(primary, [240, 320, 480, 640])}
+              src={cloudinaryUrl(primary, { width: 480, quality: priority ? "auto" : "auto:eco" })}
+              srcSet={cloudinarySrcSet(primary, [160, 240, 320, 480, 640], { quality: priority ? "auto" : "auto:eco" })}
               sizes={IMAGE_SIZES.productCard}
               alt={product.title}
               loading={priority ? "eager" : "lazy"}
               // fetchPriority high on the first row helps the listing's LCP.
-              fetchPriority={priority ? "high" : "auto"}
+              fetchPriority={priority ? "high" : "low"}
               decoding="async"
-              className={`h-full w-full object-cover transition-all duration-500 group-hover:scale-[1.04] ${
-                secondary ? "group-hover:opacity-0" : ""
+              className={`product-card-primary h-full w-full object-cover ${
+                secondary ? "product-card-primary--swap" : ""
               } ${soldOut ? "opacity-60" : ""}`}
             />
 
-            {secondary && (
-              // Stacked underneath and faded in, rather than swapping the src:
-              // changing src would show the card's background for however long
-              // the second image takes to decode. This way the swap is
-              // instant once loaded, and never flashes empty.
-              //
-              // Always lazy, never fetchPriority — the hover image must not
-              // compete with the visible one for bandwidth.
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={cloudinaryUrl(secondary, { width: 600 })}
-                srcSet={cloudinarySrcSet(secondary, [240, 320, 480, 640])}
-                sizes={IMAGE_SIZES.productCard}
-                alt=""
-                aria-hidden="true"
-                loading="lazy"
-                decoding="async"
-                className={`pointer-events-none absolute inset-0 h-full w-full object-cover opacity-0 transition-all duration-500 group-hover:scale-[1.04] group-hover:opacity-100 ${
-                  soldOut ? "group-hover:opacity-60" : ""
-                }`}
-              />
+            {secondary && secondarySrcSet && (
+              <picture aria-hidden="true">
+                {/* Only hover-capable devices receive the second image. This
+                    keeps Android and other touch devices to one request per
+                    card while restoring the desktop gallery preview. */}
+                <source
+                  media="(hover: hover) and (pointer: fine)"
+                  srcSet={secondarySrcSet}
+                  sizes={IMAGE_SIZES.productCard}
+                />
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src="data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs="
+                  alt=""
+                  loading="lazy"
+                  fetchPriority="low"
+                  decoding="async"
+                  className={`product-card-secondary pointer-events-none absolute inset-0 h-full w-full object-cover ${
+                    soldOut ? "product-card-secondary--sold-out" : ""
+                  }`}
+                />
+              </picture>
             )}
           </>
         ) : (

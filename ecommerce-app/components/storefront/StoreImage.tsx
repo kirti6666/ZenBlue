@@ -45,12 +45,12 @@ export function StoreImage({
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src={cloudinaryUrl(src, { width: width ?? 800 })}
-      srcSet={cloudinarySrcSet(src)}
+      src={cloudinaryUrl(src, { width: width ?? 800, quality: priority ? "auto" : "auto:eco" })}
+      srcSet={cloudinarySrcSet(src, undefined, { quality: priority ? "auto" : "auto:eco" })}
       sizes={sizes}
       alt={alt}
       loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "auto"}
+      fetchPriority={priority ? "high" : "low"}
       decoding="async"
       className={className}
       style={aspect ? { aspectRatio: aspect } : undefined}

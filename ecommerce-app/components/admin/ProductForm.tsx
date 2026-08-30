@@ -34,6 +34,12 @@ interface InitialProductData {
   videoUrl?: string;
   media?: MediaItem[];
   sizeChartKey?: string;
+  sizeChart?: {
+    title: string;
+    unitNote?: string;
+    columns: string[];
+    rows: string[][];
+  } | null;
   weightKg?: number;
   packageLengthCm?: number;
   packageBreadthCm?: number;
@@ -103,6 +109,19 @@ export function ProductForm({
   const [fitType, setFitType] = useState(initialData?.fitType ?? "");
   const [videoUrl, setVideoUrl] = useState(initialData?.videoUrl ?? "");
   const [sizeChartKey, setSizeChartKey] = useState(initialData?.sizeChartKey ?? "");
+  const [customChartEnabled, setCustomChartEnabled] = useState(Boolean(initialData?.sizeChart));
+  const [sizeChartTitle, setSizeChartTitle] = useState(
+    initialData?.sizeChart?.title ?? `${initialData?.title ?? "Product"} Size Guide`
+  );
+  const [sizeChartUnitNote, setSizeChartUnitNote] = useState(
+    initialData?.sizeChart?.unitNote ?? "All measurements in inches. Garment measured flat."
+  );
+  const [sizeChartColumns, setSizeChartColumns] = useState(
+    (initialData?.sizeChart?.columns ?? ["Size", "Chest", "Length"]).join(", ")
+  );
+  const [sizeChartRows, setSizeChartRows] = useState(
+    (initialData?.sizeChart?.rows ?? []).map((row) => row.join(", ")).join("\n")
+  );
   const [weightKg, setWeightKg] = useState(String(initialData?.weightKg ?? 0.3));
   const [lengthCm, setLengthCm] = useState(String(initialData?.packageLengthCm ?? 0));
   const [breadthCm, setBreadthCm] = useState(String(initialData?.packageBreadthCm ?? 0));
@@ -136,6 +155,27 @@ export function ProductForm({
       return;
     }
 
+    const chartColumns = sizeChartColumns
+      .split(",")
+      .map((cell) => cell.trim())
+      .filter(Boolean);
+    const chartRows = sizeChartRows
+      .split("\n")
+      .map((line) => line.split(",").map((cell) => cell.trim()))
+      .filter((row) => row.some(Boolean));
+    if (
+      customChartEnabled &&
+      (!sizeChartTitle.trim() ||
+        chartColumns.length < 2 ||
+        chartRows.length === 0 ||
+        chartRows.some((row) => row.length !== chartColumns.length))
+    ) {
+      setError(
+        "Complete the size chart and ensure every row has the same number of cells as the columns."
+      );
+      return;
+    }
+
     setSaving(true);
 
     const payload = {
@@ -166,6 +206,14 @@ export function ProductForm({
       fitType: fitType || undefined,
       videoUrl: videoUrl || undefined,
       sizeChartKey: sizeChartKey || undefined,
+      sizeChart: customChartEnabled
+        ? {
+            title: sizeChartTitle.trim(),
+            unitNote: sizeChartUnitNote.trim() || undefined,
+            columns: chartColumns,
+            rows: chartRows,
+          }
+        : null,
       weightKg: Number(weightKg) || undefined,
       packageLengthCm: Number(lengthCm) || undefined,
       packageBreadthCm: Number(breadthCm) || undefined,
@@ -352,9 +400,75 @@ export function ProductForm({
             className="w-full rounded-md border px-3 py-2"
           />
         </div>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="rounded-lg border bg-gray-50/50 p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium mb-1">Size chart</label>
+            <h4 className="text-sm font-semibold">Product size chart</h4>
+            <p className="mt-1 text-xs text-gray-500">
+              Add a chart specifically for this product, or select a reusable chart created in
+              Settings. The product-specific chart takes priority on the storefront.
+            </p>
+          </div>
+
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              checked={customChartEnabled}
+              onChange={(e) => setCustomChartEnabled(e.target.checked)}
+              className="h-4 w-4 rounded border-gray-300"
+            />
+            Add a custom chart for this product
+          </label>
+
+          {customChartEnabled ? (
+            <div className="space-y-4 rounded-md border bg-white p-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Chart title</label>
+                  <input
+                    value={sizeChartTitle}
+                    onChange={(e) => setSizeChartTitle(e.target.value)}
+                    placeholder="T-Shirt Size Guide"
+                    className="w-full rounded-md border px-3 py-2"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Measurement note</label>
+                  <input
+                    value={sizeChartUnitNote}
+                    onChange={(e) => setSizeChartUnitNote(e.target.value)}
+                    placeholder="All measurements in inches"
+                    className="w-full rounded-md border px-3 py-2"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Columns</label>
+                <input
+                  value={sizeChartColumns}
+                  onChange={(e) => setSizeChartColumns(e.target.value)}
+                  placeholder="Size, Chest, Length, Shoulder"
+                  className="w-full rounded-md border px-3 py-2"
+                />
+                <p className="mt-1 text-xs text-gray-400">Separate column names with commas.</p>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1">Measurements</label>
+                <textarea
+                  rows={6}
+                  value={sizeChartRows}
+                  onChange={(e) => setSizeChartRows(e.target.value)}
+                  placeholder={"S, 38, 27, 16.5\nM, 40, 28, 17.5\nL, 42, 29, 18.5"}
+                  className="w-full rounded-md border px-3 py-2 font-mono text-sm"
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  Enter one size per line. Separate measurements with commas and match the number
+                  of columns above.
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div>
+              <label className="block text-sm font-medium mb-1">Reusable size chart</label>
             <select
               value={sizeChartKey}
               onChange={(e) => setSizeChartKey(e.target.value)}
@@ -370,7 +484,11 @@ export function ProductForm({
             <p className="mt-1 text-xs text-gray-400">
               Charts are managed under Settings → Size charts.
             </p>
-          </div>
+            </div>
+          )}
+        </div>
+
+        <div>
           <div>
             <label className="block text-sm font-medium mb-1">Product video</label>
             <p className="rounded-md border border-dashed px-3 py-2 text-xs text-gray-500">

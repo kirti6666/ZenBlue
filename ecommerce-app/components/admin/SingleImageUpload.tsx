@@ -7,8 +7,8 @@ interface SingleImageUploadProps {
   value: string;
   onChange: (url: string) => void;
   label?: string;
-  /** Square preview by default; banner is 16:6 and card is 4:3. */
-  aspect?: "square" | "banner" | "card";
+  /** Square preview by default; blog is the editorial 3:2 ratio. */
+  aspect?: "square" | "banner" | "card" | "blog";
 }
 
 /**
@@ -63,6 +63,8 @@ export function SingleImageUpload({
   const previewClass =
     aspect === "banner"
       ? "w-full aspect-[16/6]"
+      : aspect === "blog"
+        ? "w-full aspect-[3/2]"
       : aspect === "card"
         ? "w-full aspect-[4/3]"
         : "w-28 aspect-square";

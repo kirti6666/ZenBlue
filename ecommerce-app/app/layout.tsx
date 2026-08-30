@@ -6,7 +6,7 @@ import { Providers } from "./providers";
 import { Analytics } from "@/components/storefront/Analytics";
 import { getSiteSettings, resolveTheme } from "@/lib/site-settings";
 import { paletteToCssVars } from "@/lib/theme";
-import { siteUrl, jsonLd } from "@/lib/seo";
+import { siteUrl, absoluteUrl, jsonLd } from "@/lib/seo";
 
 /**
  * Self-hosted via next/font so there is no render-blocking request to Google
@@ -41,6 +41,7 @@ export async function generateMetadata(): Promise<Metadata> {
   const settings = await getSiteSettings();
   const title = settings.seo.metaTitle || settings.brand.storeName;
   const description = settings.seo.metaDescription;
+  const socialImage = settings.home.heroSlides[0]?.image || settings.home.hero.backgroundImage;
 
   return {
     metadataBase: new URL(siteUrl()),
@@ -51,6 +52,16 @@ export async function generateMetadata(): Promise<Metadata> {
     },
     description,
     applicationName: settings.brand.storeName,
+    category: "fashion",
+    keywords: [
+      "ZenBlue",
+      "premium menswear",
+      "men's clothing India",
+      "men's T-shirts",
+      "men's shirts",
+      "polo T-shirts",
+      "Ahmedabad clothing brand",
+    ],
     icons: settings.brand.faviconUrl ? { icon: settings.brand.faviconUrl } : undefined,
     alternates: { canonical: "/" },
     openGraph: {
@@ -60,16 +71,22 @@ export async function generateMetadata(): Promise<Metadata> {
       description,
       url: siteUrl(),
       locale: "en_IN",
+      images: socialImage ? [{ url: socialImage, alt: settings.brand.storeName }] : undefined,
     },
     twitter: {
       card: "summary_large_image",
       title,
       description,
+      images: socialImage ? [socialImage] : undefined,
     },
     verification: settings.integrations.googleSiteVerification
       ? { google: settings.integrations.googleSiteVerification }
       : undefined,
-    robots: { index: true, follow: true },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, "max-image-preview": "large", "max-snippet": -1, "max-video-preview": -1 },
+    },
   };
 }
 
@@ -84,12 +101,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Organization JSON-LD, site-wide. Product/Breadcrumb/FAQ schema is emitted
   // by the pages that own that content.
   const orgSchema = {
-    "@context": "https://schema.org",
-    "@type": "Organization",
+    "@type": "OnlineStore",
     name: settings.brand.storeName,
     url: siteUrl(),
     description: settings.seo.metaDescription,
-    ...(settings.brand.logoUrl ? { logo: settings.brand.logoUrl } : {}),
+    ...(settings.brand.logoUrl ? { logo: absoluteUrl(settings.brand.logoUrl) } : {}),
     ...(settings.contact.phone || settings.contact.email
       ? {
           contactPoint: [
@@ -114,6 +130,20 @@ export default async function RootLayout({ children }: { children: React.ReactNo
     ].filter(Boolean),
   };
 
+  const websiteSchema = {
+    "@type": "WebSite",
+    name: settings.brand.storeName,
+    url: siteUrl(),
+    inLanguage: "en-IN",
+    potentialAction: {
+      "@type": "SearchAction",
+      target: `${siteUrl()}/shop?search={search_term_string}`,
+      "query-input": "required name=search_term_string",
+    },
+  };
+
+  const schemaGraph = { "@context": "https://schema.org", "@graph": [orgSchema, websiteSchema] };
+
   return (
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <head>
@@ -126,7 +156,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <Script
           id="org-schema"
           type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: jsonLd(orgSchema) }}
+          dangerouslySetInnerHTML={{ __html: jsonLd(schemaGraph) }}
         />
       </head>
       <body className="flex flex-col min-h-screen bg-background text-body">
