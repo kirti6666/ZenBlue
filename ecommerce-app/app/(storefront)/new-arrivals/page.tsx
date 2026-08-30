@@ -5,6 +5,7 @@ import { Product } from "@/models";
 import { getSiteSettings } from "@/lib/site-settings";
 import { PageHeader } from "@/components/storefront/PageHeader";
 import { ProductCard } from "@/components/storefront/ProductCard";
+import { PRODUCT_CARD_FIELDS } from "@/lib/catalogue-select";
 
 export const dynamic = "force-dynamic";
 
@@ -36,6 +37,8 @@ export default async function NewArrivalsPage({
   const [settings, products, total] = await Promise.all([
     getSiteSettings(),
     Product.find({ isActive: true, publishedAt: { $lte: new Date() } })
+      .select(PRODUCT_CARD_FIELDS)
+      .slice("images", 2)
       .populate("category", "name slug")
       .sort({ publishedAt: -1 })
       .skip((page - 1) * PAGE_SIZE)

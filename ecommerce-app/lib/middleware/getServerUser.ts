@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/nextauth-options";
 import { verifyAccessToken, ACCESS_TOKEN_COOKIE } from "@/lib/auth";
 import type { CurrentUser } from "./requireAuth";
+import { cache } from "react";
 
 /**
  * Same resolution logic as requireAuth(), but for Server Components/layouts,
@@ -10,7 +11,7 @@ import type { CurrentUser } from "./requireAuth";
  * Kept as a separate small function rather than a shared generic, since the
  * cookie-reading APIs differ between Route Handlers and Server Components.
  */
-export async function getServerUser(): Promise<CurrentUser | null> {
+async function readServerUser(): Promise<CurrentUser | null> {
   const session = await getServerSession(authOptions);
   if (session?.user?.id && session.user.role) {
     return {
@@ -37,3 +38,6 @@ export async function getServerUser(): Promise<CurrentUser | null> {
 
   return null;
 }
+
+/** Deduplicate session decoding when a layout and page both need the user. */
+export const getServerUser = cache(readServerUser);

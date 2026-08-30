@@ -3,6 +3,7 @@ import { SiteSettings } from "@/models";
 import { getPalette, type PaletteTokens } from "@/lib/theme";
 import { DEFAULT_MEGA_MENU_IMAGES } from "@/lib/site-settings-constants";
 import { RETURN_WINDOW_DAYS } from "@/lib/return-policy";
+import { cache } from "react";
 export { MAX_HERO_SLIDES, DEFAULT_MEGA_MENU_IMAGES } from "@/lib/site-settings-constants";
 
 /**
@@ -568,7 +569,7 @@ export function mergeSettings<T>(defaults: T, stored: unknown): T {
  * merged under whatever is stored). Safe to call from any Server Component,
  * layout, or route handler.
  */
-export async function getSiteSettings(): Promise<SiteSettingsData> {
+async function readSiteSettings(): Promise<SiteSettingsData> {
   try {
     await connectDB();
     let doc = await SiteSettings.findOne({ singletonKey: "site" }).lean();
@@ -612,6 +613,14 @@ export async function getSiteSettings(): Promise<SiteSettingsData> {
     return DEFAULT_SETTINGS;
   }
 }
+
+/**
+ * Header, footer, announcement, floating actions and the page itself all read
+ * the same settings during one render. React's request cache turns those five
+ * identical database reads into one while still returning fresh settings on
+ * the next request (so admin edits remain immediate).
+ */
+export const getSiteSettings = cache(readSiteSettings);
 
 /**
  * Resolves the live colour tokens: the chosen ZenBlue direction, with the two

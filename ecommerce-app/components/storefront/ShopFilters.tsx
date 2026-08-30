@@ -72,17 +72,17 @@ export function ShopFilters({
   }
 
   return (
-    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-3">
-      <form onSubmit={handleSearchSubmit} className="col-span-2 flex w-full gap-2 sm:w-auto">
+    <div className="grid w-full grid-cols-2 gap-1.5 sm:flex sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-2">
+      <form onSubmit={handleSearchSubmit} className="col-span-2 flex w-full gap-1.5 sm:w-auto">
         <input
           placeholder="Search products..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          className="h-10 min-w-0 flex-1 rounded-lg border border-line bg-white px-3 text-sm outline-none focus:border-primary sm:w-64"
+          className="h-9 min-w-0 flex-1 rounded-md border border-line bg-white px-3 text-xs outline-none focus:border-primary sm:h-10 sm:w-64 sm:rounded-lg sm:text-sm"
         />
         <button
           type="submit"
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-line bg-surface text-heading transition-colors hover:border-primary sm:w-auto sm:px-4"
+          className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-line bg-surface text-heading transition-colors hover:border-primary sm:h-10 sm:w-auto sm:rounded-lg sm:px-4"
           aria-label="Search products"
         >
           <Search size={17} />
@@ -94,7 +94,7 @@ export function ShopFilters({
         value={currentCategory ?? ""}
         onChange={(e) => updateParam("category", e.target.value)}
         aria-label="Filter by category"
-        className="h-10 min-w-0 w-full rounded-lg border border-line bg-white px-2.5 text-xs text-heading outline-none focus:border-primary sm:w-auto sm:px-3 sm:text-sm"
+        className="h-9 min-w-0 w-full rounded-md border border-line bg-white px-2.5 text-[11px] text-heading outline-none focus:border-primary sm:h-10 sm:w-auto sm:rounded-lg sm:px-3 sm:text-sm"
       >
         <option value="">All Categories</option>
         {categories.map((c) => (
@@ -104,22 +104,22 @@ export function ShopFilters({
         ))}
       </select>}
 
-      <select value={currentFabric ?? ""} onChange={(e) => updateParam("fabric", e.target.value)} aria-label="Filter by fabric" className="h-10 min-w-0 w-full rounded-lg border border-line bg-white px-2.5 text-xs text-heading outline-none focus:border-primary sm:w-auto sm:max-w-48 sm:px-3 sm:text-sm">
+      <select value={currentFabric ?? ""} onChange={(e) => updateParam("fabric", e.target.value)} aria-label="Filter by fabric" className="h-9 min-w-0 w-full rounded-md border border-line bg-white px-2.5 text-[11px] text-heading outline-none focus:border-primary sm:h-10 sm:w-auto sm:max-w-48 sm:rounded-lg sm:px-3 sm:text-sm">
         <option value="">All fabrics</option>
         {fabrics.map((value) => <option key={value} value={value}>{value}</option>)}
       </select>
 
-      <select value={currentColour ?? ""} onChange={(e) => updateParam("colour", e.target.value)} aria-label="Filter by colour" className="h-10 min-w-0 w-full rounded-lg border border-line bg-white px-2.5 text-xs text-heading outline-none focus:border-primary sm:w-auto sm:px-3 sm:text-sm">
+      <select value={currentColour ?? ""} onChange={(e) => updateParam("colour", e.target.value)} aria-label="Filter by colour" className="h-9 min-w-0 w-full rounded-md border border-line bg-white px-2.5 text-[11px] text-heading outline-none focus:border-primary sm:h-10 sm:w-auto sm:rounded-lg sm:px-3 sm:text-sm">
         <option value="">All colours</option>
         {colours.map((value) => <option key={value} value={value}>{value}</option>)}
       </select>
 
-      <select value={currentSize ?? ""} onChange={(e) => updateParam("size", e.target.value)} aria-label="Filter by size" className="h-10 min-w-0 w-full rounded-lg border border-line bg-white px-2.5 text-xs text-heading outline-none focus:border-primary sm:w-auto sm:px-3 sm:text-sm">
+      <select value={currentSize ?? ""} onChange={(e) => updateParam("size", e.target.value)} aria-label="Filter by size" className="h-9 min-w-0 w-full rounded-md border border-line bg-white px-2.5 text-[11px] text-heading outline-none focus:border-primary sm:h-10 sm:w-auto sm:rounded-lg sm:px-3 sm:text-sm">
         <option value="">All sizes</option>
         {sizes.map((value) => <option key={value} value={value}>{value}</option>)}
       </select>
 
-      <button type="button" onClick={() => updateParam("inStock", inStock ? "" : "1")} aria-pressed={inStock} className={`h-10 rounded-lg border px-3 text-xs font-medium transition-colors sm:text-sm ${inStock ? "border-primary bg-primary text-primary-foreground" : "border-line bg-surface text-heading hover:border-primary"}`}>
+      <button type="button" onClick={() => updateParam("inStock", inStock ? "" : "1")} aria-pressed={inStock} className={`h-9 rounded-md border px-2.5 text-[11px] font-medium transition-colors sm:h-10 sm:rounded-lg sm:px-3 sm:text-sm ${inStock ? "border-primary bg-primary text-primary-foreground" : "border-line bg-surface text-heading hover:border-primary"}`}>
         In stock
       </button>
 
@@ -127,14 +127,14 @@ export function ShopFilters({
         value={currentSort ?? "newest"}
         onChange={(e) => updateParam("sort", e.target.value)}
         aria-label="Sort products"
-        className="h-10 min-w-0 w-full rounded-lg border border-line bg-white px-2.5 text-xs text-heading outline-none focus:border-primary sm:w-auto sm:px-3 sm:text-sm"
+        className="h-9 min-w-0 w-full rounded-md border border-line bg-white px-2.5 text-[11px] text-heading outline-none focus:border-primary sm:h-10 sm:w-auto sm:rounded-lg sm:px-3 sm:text-sm"
       >
         <option value="newest">Newest</option>
         <option value="price_asc">Price: Low to High</option>
         <option value="price_desc">Price: High to Low</option>
       </select>
 
-      {hasFilters && <button type="button" onClick={clearFilters} className="inline-flex h-10 items-center justify-center gap-1 rounded-lg px-2 text-xs text-muted hover:text-heading"><X size={14}/> Clear</button>}
+      {hasFilters && <button type="button" onClick={clearFilters} className="inline-flex h-9 items-center justify-center gap-1 rounded-md px-2 text-[11px] text-muted hover:text-heading sm:h-10 sm:text-xs"><X size={13}/> Clear</button>}
     </div>
   );
 }

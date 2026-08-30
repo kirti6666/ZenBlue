@@ -1,0 +1,21 @@
+/**
+ * Immediate navigation feedback. Next prefetches this lightweight boundary for
+ * dynamic storefront routes, so taps respond at once while server data arrives.
+ */
+export default function StorefrontLoading() {
+  return (
+    <main className="mx-auto w-full max-w-page animate-pulse px-4 py-5 sm:px-6 sm:py-8" aria-label="Loading page">
+      <div className="h-7 w-40 rounded bg-surface-alt" />
+      <div className="mt-3 h-3 w-64 max-w-full rounded bg-surface-alt" />
+      <div className="mt-7 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+        {Array.from({ length: 8 }, (_, index) => (
+          <div key={index}>
+            <div className="aspect-[4/5] rounded-lg bg-surface-alt" />
+            <div className="mt-3 h-4 w-4/5 rounded bg-surface-alt" />
+            <div className="mt-2 h-3 w-2/5 rounded bg-surface-alt" />
+          </div>
+        ))}
+      </div>
+    </main>
+  );
+}

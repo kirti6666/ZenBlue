@@ -9,6 +9,7 @@ import { ProductRail } from "@/components/storefront/ProductRail";
 import { ShopTheLook } from "@/components/storefront/ShopTheLook";
 import { Testimonials } from "@/components/storefront/Testimonials";
 import { InstagramStrip } from "@/components/storefront/InstagramStrip";
+import { PRODUCT_CARD_FIELDS } from "@/lib/catalogue-select";
 
 export const dynamic = "force-dynamic";
 
@@ -31,16 +32,22 @@ export default async function HomePage() {
   const [settings, featured, newArrivals, bestSellers, categories] = await Promise.all([
     getSiteSettings(),
     Product.find({ isActive: true, isFeatured: true })
+      .select(PRODUCT_CARD_FIELDS)
+      .slice("images", 2)
       .populate("category", "name slug")
       .sort({ publishedAt: -1 })
       .limit(8)
       .lean(),
     Product.find({ isActive: true, publishedAt: { $lte: new Date() } })
+      .select(PRODUCT_CARD_FIELDS)
+      .slice("images", 2)
       .populate("category", "name slug")
       .sort({ publishedAt: -1 })
       .limit(8)
       .lean(),
     Product.find({ isActive: true, salesCount: { $gt: 0 } })
+      .select(PRODUCT_CARD_FIELDS)
+      .slice("images", 2)
       .populate("category", "name slug")
       .sort({ salesCount: -1 })
       .limit(8)

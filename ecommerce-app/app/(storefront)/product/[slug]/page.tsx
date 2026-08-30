@@ -11,6 +11,7 @@ import { ProductReviews } from "@/components/storefront/ProductReviews";
 import { getSiteSettings, findSizeChart } from "@/lib/site-settings";
 import { breadcrumbSchema, productSchema, absoluteUrl, jsonLd } from "@/lib/seo";
 import { totalStock } from "@/lib/inventory";
+import { PRODUCT_CARD_FIELDS } from "@/lib/catalogue-select";
 
 export const dynamic = "force-dynamic";
 
@@ -74,6 +75,8 @@ export default async function ProductPage({ params }: { params: { slug: string }
         _id: { $ne: product._id },
         isActive: true,
       })
+        .select(PRODUCT_CARD_FIELDS)
+        .slice("images", 2)
         .populate("category", "name slug")
         .limit(4)
         .lean()

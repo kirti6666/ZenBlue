@@ -7,6 +7,7 @@ import { ShopFilters } from "@/components/storefront/ShopFilters";
 import { getSiteSettings } from "@/lib/site-settings";
 import { absoluteUrl, breadcrumbSchema, jsonLd } from "@/lib/seo";
 import { applyCatalogueFilters, getProductFacets } from "@/lib/product-filters";
+import { PRODUCT_CARD_FIELDS } from "@/lib/catalogue-select";
 
 interface ShopPageProps {
   searchParams: {
@@ -69,6 +70,8 @@ export default async function ShopPage({ searchParams }: ShopPageProps) {
 
   const [products, total, categories, facets] = await Promise.all([
     Product.find(filter)
+      .select(PRODUCT_CARD_FIELDS)
+      .slice("images", 2)
       .populate("category", "name slug")
       .sort(sort)
       .skip((page - 1) * PAGE_SIZE)

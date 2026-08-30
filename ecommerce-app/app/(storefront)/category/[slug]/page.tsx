@@ -10,6 +10,7 @@ import { ICategory } from "@/models/Category";
 import { absoluteUrl, breadcrumbSchema, jsonLd } from "@/lib/seo";
 import { ShopFilters } from "@/components/storefront/ShopFilters";
 import { applyCatalogueFilters, getProductFacets } from "@/lib/product-filters";
+import { PRODUCT_CARD_FIELDS } from "@/lib/catalogue-select";
 
 interface CategoryPageProps {
   params: { slug: string };
@@ -59,6 +60,8 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
 
   const [products, total, facets] = await Promise.all([
     Product.find(filter)
+      .select(PRODUCT_CARD_FIELDS)
+      .slice("images", 2)
       .populate("category", "name slug")
       .sort(sort)
       .skip((page - 1) * PAGE_SIZE)
@@ -91,9 +94,9 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
   ];
 
   return (
-    <main className="mx-auto max-w-page px-5 py-8 sm:px-6 sm:py-10">
+    <main className="mx-auto max-w-page px-4 py-4 sm:px-6 sm:py-8">
       <Script id="category-schema" type="application/ld+json" dangerouslySetInnerHTML={{ __html: jsonLd(schemas) }} />
-      <h1 className="mb-6 text-center text-2xl font-bold sm:text-left">{categoryName}</h1>
+      <h1 className="sr-only">{categoryName}</h1>
 
       <ShopFilters categories={[]} showCategory={false} currentSort={searchParams.sort} currentFabric={searchParams.fabric} currentColour={searchParams.colour} currentSize={searchParams.size} inStock={searchParams.inStock === "1"} fabrics={facets.fabrics} colours={facets.colours} sizes={facets.sizes} />
 
@@ -101,7 +104,7 @@ export default async function CategoryPage({ params, searchParams }: CategoryPag
         <p className="text-center text-gray-400">No products in this category yet.</p>
       ) : (
         <>
-          <div className="mt-6 grid grid-cols-2 gap-x-3 gap-y-7 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
+          <div className="mt-4 grid grid-cols-2 gap-x-3 gap-y-7 sm:mt-6 sm:gap-x-4 sm:gap-y-8 md:grid-cols-3 lg:grid-cols-4">
           {products.map((p, index) => (
               <ProductCard key={String(p._id)} product={JSON.parse(JSON.stringify(p))} currency={currency} priority={index < 4} />
             ))}
