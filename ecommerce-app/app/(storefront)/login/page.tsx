@@ -7,6 +7,7 @@ import { getProviders, signIn } from "next-auth/react";
 import { ShieldCheck } from "lucide-react";
 import { OtpLoginForm } from "@/components/storefront/OtpLoginForm";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 /**
  * Sign-in, with three paths: password, one-time code, and Google.
@@ -293,7 +294,7 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-[70vh] items-center justify-center p-6">
       {/* useSearchParams needs a Suspense boundary in the App Router. */}
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="w-full max-w-md space-y-4"><Skeleton className="h-8 w-28"/><Skeleton className="h-12 w-full"/><Skeleton className="h-12 w-full"/><Skeleton className="h-12 w-full"/></div>}>
         <LoginForm />
       </Suspense>
     </main>

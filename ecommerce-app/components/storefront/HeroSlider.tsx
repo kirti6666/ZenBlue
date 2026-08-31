@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
+import { getImageProps } from "next/image";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import type { Banner } from "@/lib/site-settings";
 import { MAX_HERO_SLIDES } from "@/lib/site-settings-constants";
-import { cloudinaryUrl, cloudinarySrcSet } from "@/lib/image";
+import { cloudinaryUrl } from "@/lib/image";
 
 export { MAX_HERO_SLIDES };
 
@@ -149,6 +150,30 @@ export function HeroSlider({
         {items.map((slide, i) => {
           const isActive = i === index;
           const showVideo = Boolean(slide.videoUrl) && !reducedMotion;
+          const desktopSource = slide.image || slide.mobileImage || "";
+          const mobileSource = slide.mobileImage || slide.image || "";
+          const desktopImage = desktopSource
+            ? getImageProps({
+                src: cloudinaryUrl(desktopSource, { width: 2560, quality: "auto:best" }),
+                alt: "",
+                width: 1950,
+                height: 810,
+                sizes: "100vw",
+                quality: 78,
+                priority: i === 0,
+              }).props
+            : null;
+          const mobileImage = mobileSource
+            ? getImageProps({
+                src: cloudinaryUrl(mobileSource, { width: 1280, quality: "auto:best" }),
+                alt: "",
+                width: 1024,
+                height: 1024,
+                sizes: "100vw",
+                quality: 76,
+                priority: i === 0,
+              }).props
+            : null;
 
           return (
             <div
@@ -177,24 +202,8 @@ export function HeroSlider({
               ) : slide.image || slide.mobileImage ? (
                 <>
                   <picture>
-                    <source
-                      media="(max-width: 767px)"
-                      srcSet={
-                        cloudinarySrcSet(slide.mobileImage || slide.image, [480, 640, 768, 1024]) ||
-                        slide.mobileImage ||
-                        slide.image
-                      }
-                    />
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
-                      src={cloudinaryUrl(slide.image || slide.mobileImage || "", { width: 1950 })}
-                      srcSet={cloudinarySrcSet(slide.image || slide.mobileImage || "", [768, 1024, 1280, 1600, 1950, 2560])}
-                      sizes="100vw"
-                      alt=""
-                      loading={i === 0 ? "eager" : "lazy"}
-                      fetchPriority={i === 0 ? "high" : "low"}
-                      className="absolute inset-0 h-full w-full object-cover"
-                    />
+                    {mobileImage?.srcSet && <source media="(max-width: 767px)" srcSet={mobileImage.srcSet} />}
+                    {desktopImage && <img {...desktopImage} className="absolute inset-0 h-full w-full object-cover" />}
                   </picture>
                 </>
               ) : (

@@ -3,6 +3,7 @@ import { CartSync } from "@/components/storefront/CartSync";
 import { Footer } from "@/components/storefront/Footer";
 import { Header } from "@/components/storefront/Header";
 import { WhatsAppFloat } from "@/components/storefront/WhatsAppFloat";
+import { SmoothScroll } from "@/components/storefront/SmoothScroll";
 
 /**
  * Storefront-only chrome.
@@ -14,6 +15,7 @@ import { WhatsAppFloat } from "@/components/storefront/WhatsAppFloat";
 export default function StorefrontLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
+      <SmoothScroll />
       <AnnouncementBar />
       <Header />
       <main className="flex-1">{children}</main>

@@ -7,6 +7,7 @@ import { useCartStore } from "@/store/useCartStore";
 import { AddressForm } from "@/components/storefront/AddressForm";
 import { AvailableCoupons } from "@/components/storefront/AvailableCoupons";
 import { StoreImage } from "@/components/storefront/StoreImage";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 interface Address {
   _id: string;
@@ -141,7 +142,17 @@ export default function CheckoutPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  if (!mounted) return null;
+  if (!mounted) {
+    return (
+      <main className="mx-auto min-h-[70vh] max-w-5xl px-4 py-5 sm:px-6 sm:py-9" aria-label="Loading checkout">
+        <Skeleton className="h-8 w-40" />
+        <div className="mt-5 grid gap-5 md:grid-cols-[1fr_360px]">
+          <Skeleton className="h-96 rounded-xl" />
+          <Skeleton className="h-80 rounded-xl" />
+        </div>
+      </main>
+    );
+  }
 
   const cur = commerce.currencySymbol;
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);

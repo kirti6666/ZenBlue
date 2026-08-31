@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
+import { StoreImage } from "./StoreImage";
 
 interface Suggestion {
   _id: string;
@@ -168,12 +169,13 @@ export function SearchOverlay({ currencySymbol = "₹" }: { currencySymbol?: str
                               className="flex w-full items-center gap-3 rounded-lg p-2 text-left hover:bg-surface-alt"
                             >
                               {p.image ? (
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
+                                <StoreImage
                                   src={p.image}
                                   alt=""
-                                  loading="lazy"
-                                  className="h-12 w-12 rounded object-cover"
+                                  width={96}
+                                  sizes="48px"
+                                  wrapperClassName="h-12 w-12 shrink-0 rounded"
+                                  className="object-cover"
                                 />
                               ) : (
                                 <span className="h-12 w-12 rounded bg-surface-alt" />

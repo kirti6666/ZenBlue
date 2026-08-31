@@ -1,5 +1,6 @@
 import { Instagram } from "lucide-react";
 import type { InstagramPost } from "@/lib/site-settings";
+import { StoreImage } from "./StoreImage";
 
 /**
  * Instagram feed strip.
@@ -49,11 +50,11 @@ export function InstagramStrip({
             className="group relative aspect-square overflow-hidden rounded-lg bg-surface-alt"
           >
             {post.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
+              <StoreImage
                 src={post.image}
                 alt={post.caption || ""}
-                loading="lazy"
+                width={480}
+                sizes="(max-width: 768px) 33vw, 16vw"
                 className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
               />
             )}

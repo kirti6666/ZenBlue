@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { cloudinaryUrl, cloudinarySrcSet } from "@/lib/image";
+import Image from "next/image";
+import { cloudinaryPlaceholder, cloudinaryUrl } from "@/lib/image";
 
 export interface CategoryCircle {
   _id: string;
@@ -40,7 +41,7 @@ export function CategoryCircles({
         )}
 
         <ul className="-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto overscroll-x-contain scroll-smooth px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:gap-6 sm:px-0 md:gap-8 lg:justify-center [&::-webkit-scrollbar]:hidden">
-          {categories.map((cat, index) => (
+          {categories.map((cat) => (
             <li
               key={cat._id}
               className="relative isolate w-[calc((100vw-3.5rem)/4)] min-w-16 max-w-[76px] shrink-0 snap-start sm:w-[100px] sm:max-w-none md:w-[112px]"
@@ -49,19 +50,17 @@ export function CategoryCircles({
                 href={`/category/${cat.slug}`}
                 className="group flex w-full flex-col items-center gap-1.5 sm:gap-2.5"
               >
-                <span className="block aspect-square w-full overflow-hidden rounded-full bg-surface ring-1 ring-inset ring-line transition-[box-shadow] duration-300 group-hover:ring-2 group-hover:ring-primary">
+                <span className="relative block aspect-square w-full overflow-hidden rounded-full bg-surface ring-1 ring-inset ring-line transition-[box-shadow] duration-300 group-hover:ring-2 group-hover:ring-primary">
                   {cat.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={cloudinaryUrl(cat.image, { width: 160, quality: index < 4 ? "auto" : "auto:eco" })}
-                      srcSet={cloudinarySrcSet(cat.image, [64, 96, 128, 160, 224], { quality: index < 4 ? "auto" : "auto:eco" })}
+                    <Image
+                      src={cloudinaryUrl(cat.image, { width: 320, quality: "auto:best" })}
                       sizes="(max-width: 640px) 19vw, 112px"
-                      width={112}
-                      height={112}
+                      fill
                       alt={cat.name}
-                      loading={index < 4 ? "eager" : "lazy"}
-                      fetchPriority={index < 4 ? "high" : "low"}
-                      decoding="async"
+                      quality={75}
+                      unoptimized={!cat.image.startsWith("/") && !cat.image.includes("res.cloudinary.com")}
+                      placeholder={cat.image.includes("res.cloudinary.com") ? "blur" : "empty"}
+                      blurDataURL={cat.image.includes("res.cloudinary.com") ? cloudinaryPlaceholder(cat.image) : undefined}
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (

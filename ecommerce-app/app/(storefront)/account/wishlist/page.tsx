@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Heart, X } from "lucide-react";
 import { useWishlistStore } from "@/store/useWishlistStore";
+import { StoreImage } from "@/components/storefront/StoreImage";
 
 interface WishlistProduct {
   _id: string;
@@ -21,15 +22,15 @@ function WishlistSkeleton() {
       {Array.from({ length: 4 }).map((_, index) => (
         <div
           key={index}
-          className="grid animate-pulse grid-cols-[88px_minmax(0,1fr)_32px] gap-3 rounded-xl border border-line bg-surface p-2.5 sm:grid-cols-[104px_minmax(0,1fr)_32px] sm:p-3"
+          className="grid grid-cols-[88px_minmax(0,1fr)_32px] gap-3 rounded-xl border border-line bg-surface p-2.5 sm:grid-cols-[104px_minmax(0,1fr)_32px] sm:p-3"
         >
-          <div className="aspect-[4/5] rounded-lg bg-surface-alt" />
+          <div className="skeleton-shimmer aspect-[4/5] rounded-lg" />
           <div className="self-center space-y-2">
-            <div className="h-2 w-16 rounded bg-surface-alt" />
-            <div className="h-3.5 w-4/5 rounded bg-surface-alt" />
-            <div className="h-3 w-20 rounded bg-surface-alt" />
+            <div className="skeleton-shimmer h-2 w-16 rounded" />
+            <div className="skeleton-shimmer h-3.5 w-4/5 rounded" />
+            <div className="skeleton-shimmer h-3 w-20 rounded" />
           </div>
-          <div className="h-8 w-8 rounded-full bg-surface-alt" />
+          <div className="skeleton-shimmer h-8 w-8 rounded-full" />
         </div>
       ))}
     </div>
@@ -136,10 +137,11 @@ export default function WishlistPage() {
                   className="block aspect-[4/5] overflow-hidden rounded-lg bg-surface-alt"
                 >
                   {p.images?.[0] ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <StoreImage
                       src={p.images[0]}
                       alt={p.title}
+                      width={240}
+                      sizes="104px"
                       className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
                     />
                   ) : (

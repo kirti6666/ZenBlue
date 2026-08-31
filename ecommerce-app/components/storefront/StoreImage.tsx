@@ -1,14 +1,12 @@
-import { cloudinaryUrl, cloudinarySrcSet, IMAGE_SIZES } from "@/lib/image";
+import Image from "next/image";
+import { cloudinaryPlaceholder, cloudinaryUrl, IMAGE_SIZES } from "@/lib/image";
 
 /**
  * Storefront image.
  *
- * A plain <img> with Cloudinary transformations rather than next/image, chosen
- * deliberately: Cloudinary already does format negotiation, compression and
- * resizing at the CDN edge, so routing the same work through Next's optimiser
- * adds a second hop and a serverless invocation per image for no visual gain.
- * Everything next/image gives us that matters here — srcset, sizes, lazy
- * loading, and a reserved box that prevents layout shift — is set explicitly.
+ * Cloudinary supplies the source asset while Next Image chooses the rendered
+ * width, compresses it, caches the result and keeps a blur placeholder visible
+ * through the skeleton-to-content handoff.
  */
 export function StoreImage({
   src,
@@ -16,6 +14,7 @@ export function StoreImage({
   width,
   sizes = IMAGE_SIZES.productCard,
   className = "",
+  wrapperClassName = "",
   priority = false,
   aspect,
 }: {
@@ -25,6 +24,7 @@ export function StoreImage({
   width?: number;
   sizes?: string;
   className?: string;
+  wrapperClassName?: string;
   /** Set on above-the-fold images so the LCP candidate is not lazy-loaded. */
   priority?: boolean;
   /** e.g. "4/5" — reserves the box so the page does not jump as images arrive. */
@@ -42,18 +42,24 @@ export function StoreImage({
     );
   }
 
+  const source = cloudinaryUrl(src, { width: width ?? 1200, quality: "auto:best" });
+  const nextOptimizable = source.startsWith("/") || source.includes("res.cloudinary.com");
+  const canBlur = src.includes("res.cloudinary.com");
+
   return (
-    // eslint-disable-next-line @next/next/no-img-element
-    <img
-      src={cloudinaryUrl(src, { width: width ?? 800, quality: priority ? "auto" : "auto:eco" })}
-      srcSet={cloudinarySrcSet(src, undefined, { quality: priority ? "auto" : "auto:eco" })}
-      sizes={sizes}
-      alt={alt}
-      loading={priority ? "eager" : "lazy"}
-      fetchPriority={priority ? "high" : "low"}
-      decoding="async"
-      className={className}
-      style={aspect ? { aspectRatio: aspect } : undefined}
-    />
+    <span className={`relative block h-full w-full overflow-hidden bg-surface-alt ${wrapperClassName}`} style={aspect ? { aspectRatio: aspect } : undefined}>
+      <Image
+        src={source}
+        alt={alt}
+        fill
+        sizes={sizes}
+        priority={priority}
+        quality={priority ? 80 : 72}
+        unoptimized={!nextOptimizable}
+        placeholder={canBlur ? "blur" : "empty"}
+        blurDataURL={canBlur ? cloudinaryPlaceholder(src) : undefined}
+        className={className}
+      />
+    </span>
   );
 }

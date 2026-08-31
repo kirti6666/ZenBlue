@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_cache } from "next/cache";
 import { ArrowRight } from "lucide-react";
 import { connectDB } from "@/lib/db";
 import { Product, Category } from "@/models";
@@ -9,9 +10,23 @@ import { ProductRail } from "@/components/storefront/ProductRail";
 import { ShopTheLook } from "@/components/storefront/ShopTheLook";
 import { Testimonials } from "@/components/storefront/Testimonials";
 import { InstagramStrip } from "@/components/storefront/InstagramStrip";
+import { StoreImage } from "@/components/storefront/StoreImage";
 import { PRODUCT_CARD_FIELDS } from "@/lib/catalogue-select";
 
-export const dynamic = "force-dynamic";
+const getHomepageCatalogue = unstable_cache(
+  async () => {
+    await connectDB();
+    const [featured, newArrivals, bestSellers, categories] = await Promise.all([
+      Product.find({ isActive: true, isFeatured: true }).select(PRODUCT_CARD_FIELDS).slice("images", 2).populate("category", "name slug").sort({ publishedAt: -1 }).limit(8).lean(),
+      Product.find({ isActive: true, publishedAt: { $lte: new Date() } }).select(PRODUCT_CARD_FIELDS).slice("images", 2).populate("category", "name slug").sort({ publishedAt: -1 }).limit(8).lean(),
+      Product.find({ isActive: true, salesCount: { $gt: 0 } }).select(PRODUCT_CARD_FIELDS).slice("images", 2).populate("category", "name slug").sort({ salesCount: -1 }).limit(8).lean(),
+      Category.find({ isActive: true }).sort({ name: 1 }).limit(14).lean(),
+    ]);
+    return JSON.parse(JSON.stringify({ featured, newArrivals, bestSellers, categories }));
+  },
+  ["homepage-catalogue-v1"],
+  { revalidate: 60, tags: ["catalogue"] }
+);
 
 /**
  * ZenBlue homepage.
@@ -27,41 +42,15 @@ export const dynamic = "force-dynamic";
  * cost four.
  */
 export default async function HomePage() {
-  await connectDB();
-
-  const [settings, featured, newArrivals, bestSellers, categories] = await Promise.all([
+  const [settings, catalogue] = await Promise.all([
     getSiteSettings(),
-    Product.find({ isActive: true, isFeatured: true })
-      .select(PRODUCT_CARD_FIELDS)
-      .slice("images", 2)
-      .populate("category", "name slug")
-      .sort({ publishedAt: -1 })
-      .limit(8)
-      .lean(),
-    Product.find({ isActive: true, publishedAt: { $lte: new Date() } })
-      .select(PRODUCT_CARD_FIELDS)
-      .slice("images", 2)
-      .populate("category", "name slug")
-      .sort({ publishedAt: -1 })
-      .limit(8)
-      .lean(),
-    Product.find({ isActive: true, salesCount: { $gt: 0 } })
-      .select(PRODUCT_CARD_FIELDS)
-      .slice("images", 2)
-      .populate("category", "name slug")
-      .sort({ salesCount: -1 })
-      .limit(8)
-      .lean(),
-    // Sub-categories are included: the circular strip is a shortcut to a kind
-    // of garment ("Kurta Set", "Sherwani"), which is exactly what a
-    // sub-category is — restricting it to top-level parents would leave a
-    // three-item row.
-    Category.find({ isActive: true }).sort({ name: 1 }).limit(14).lean(),
+    getHomepageCatalogue(),
   ]);
+  const { featured, newArrivals, bestSellers, categories } = catalogue;
 
   const { home, commerce, integrations } = settings;
   const currency = commerce.currencySymbol;
-  const plain = (docs: unknown) => JSON.parse(JSON.stringify(docs));
+  const plain = (docs: unknown): any[] => docs as any[];
 
   return (
     <main>
@@ -104,11 +93,11 @@ export default async function HomePage() {
                   }`}
                 >
                   {b.image ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
+                    <StoreImage
                       src={b.image}
                       alt={b.heading}
-                      loading="lazy"
+                      width={1600}
+                      sizes={wide ? "100vw" : "(max-width: 768px) 100vw, 50vw"}
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   ) : (

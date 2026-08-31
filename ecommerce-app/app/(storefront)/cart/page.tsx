@@ -5,6 +5,8 @@ import Link from "next/link";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useCartStore } from "@/store/useCartStore";
 import { useCurrency } from "@/lib/useCurrency";
+import { Skeleton } from "@/components/ui/Skeleton";
+import { StoreImage } from "@/components/storefront/StoreImage";
 
 export default function CartPage() {
   const [mounted, setMounted] = useState(false);
@@ -15,7 +17,16 @@ export default function CartPage() {
 
   useEffect(() => setMounted(true), []);
 
-  if (!mounted) return null; // avoid hydration mismatch with persisted localStorage cart
+  if (!mounted) {
+    return (
+      <main className="mx-auto min-h-[65vh] max-w-4xl px-4 py-5 sm:px-6 sm:py-9" aria-label="Loading shopping bag">
+        <Skeleton className="h-8 w-44" />
+        <div className="mt-5 space-y-3">
+          {Array.from({ length: 3 }, (_, index) => <Skeleton key={index} className="h-32 w-full rounded-xl" />)}
+        </div>
+      </main>
+    );
+  }
 
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
 
@@ -54,8 +65,7 @@ export default function CartPage() {
               aria-label={`View ${item.title}`}
             >
               {item.image ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={item.image} alt={item.title} className="h-full w-full object-cover" />
+                <StoreImage src={item.image} alt={item.title} width={240} sizes="104px" className="h-full w-full object-cover" />
               ) : (
                 <span className="flex h-full items-center justify-center px-2 text-center text-[10px] text-muted">
                   No image

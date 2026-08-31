@@ -1,8 +1,9 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
-import { cloudinaryUrl, cloudinarySrcSet, IMAGE_SIZES } from "@/lib/image";
+import { cloudinaryPlaceholder, cloudinaryUrl, IMAGE_SIZES } from "@/lib/image";
 import { videoPoster, type MediaItem } from "@/lib/media";
 
 /**
@@ -53,6 +54,8 @@ export function ProductGallery({
       </div>
     );
   }
+  const currentSource = current.type === "image" ? cloudinaryUrl(current.url, { width: 1600, quality: "auto:best" }) : "";
+  const currentOptimizable = currentSource.startsWith("/") || currentSource.includes("res.cloudinary.com");
 
   return (
     <div onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)} onFocusCapture={() => setPaused(true)} onBlurCapture={() => setPaused(false)}>
@@ -77,14 +80,17 @@ export function ProductGallery({
             className="h-full w-full object-cover"
           />
         ) : (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={cloudinaryUrl(current.url, { width: 900 })}
-            srcSet={cloudinarySrcSet(current.url, [480, 640, 900, 1200])}
+          <Image
+            key={current.url}
+            src={currentSource}
             sizes={IMAGE_SIZES.productDetail}
             alt={current.alt || title}
-            // The gallery is the LCP element on this route.
-            fetchPriority={active === 0 ? "high" : "auto"}
+            fill
+            priority={active === 0}
+            quality={82}
+            unoptimized={!currentOptimizable}
+            placeholder={current.url.includes("res.cloudinary.com") ? "blur" : "empty"}
+            blurDataURL={current.url.includes("res.cloudinary.com") ? cloudinaryPlaceholder(current.url) : undefined}
             className="h-full w-full object-cover"
           />
         )}
@@ -114,6 +120,7 @@ export function ProductGallery({
         <div className="mt-3 flex flex-wrap justify-center gap-2 md:justify-start">
           {media.map((item, i) => {
             const poster = item.type === "video" ? videoPoster(item) : item.url;
+            const posterSource = poster ? cloudinaryUrl(poster, { width: 240, quality: "auto:eco" }) : "";
             return (
               <button
                 key={item.url + i}
@@ -128,12 +135,13 @@ export function ProductGallery({
                 }`}
               >
                 {poster ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={cloudinaryUrl(poster, { width: 140 })}
+                  <Image
+                    src={posterSource}
                     alt=""
-                    loading="lazy"
-                    decoding="async"
+                    fill
+                    sizes="80px"
+                    quality={65}
+                    unoptimized={!posterSource.startsWith("/") && !posterSource.includes("res.cloudinary.com")}
                     className="h-full w-full object-cover"
                   />
                 ) : (

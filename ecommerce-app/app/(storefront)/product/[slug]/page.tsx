@@ -3,7 +3,6 @@ import Link from "next/link";
 import Script from "next/script";
 import { notFound } from "next/navigation";
 import { ChevronRight } from "lucide-react";
-import { connectDB } from "@/lib/db";
 import { Product } from "@/models";
 import { ProductDetailClient } from "@/components/storefront/ProductDetailClient";
 import { ProductCard } from "@/components/storefront/ProductCard";
@@ -12,6 +11,7 @@ import { getSiteSettings, findSizeChart } from "@/lib/site-settings";
 import { breadcrumbSchema, productSchema, absoluteUrl, jsonLd } from "@/lib/seo";
 import { totalStock } from "@/lib/inventory";
 import { PRODUCT_CARD_FIELDS } from "@/lib/catalogue-select";
+import { getProductBySlug } from "@/lib/product-query";
 
 export const dynamic = "force-dynamic";
 
@@ -20,16 +20,7 @@ export async function generateMetadata({
 }: {
   params: { slug: string };
 }): Promise<Metadata> {
-  await connectDB();
-  const p = await Product.findOne({ slug: params.slug, isActive: true })
-    .select("title description images metaTitle metaDescription")
-    .lean<{
-      title: string;
-      description: string;
-      images: string[];
-      metaTitle?: string;
-      metaDescription?: string;
-    }>();
+  const p = await getProductBySlug(params.slug);
 
   if (!p) return { title: "Product not found" };
 
@@ -57,14 +48,7 @@ export async function generateMetadata({
 }
 
 export default async function ProductPage({ params }: { params: { slug: string } }) {
-  await connectDB();
-
-  const [product, settings] = await Promise.all([
-    Product.findOne({ slug: params.slug, isActive: true })
-      .populate("category", "name slug")
-      .lean<any>(),
-    getSiteSettings(),
-  ]);
+  const [product, settings] = await Promise.all([getProductBySlug(params.slug), getSiteSettings()]);
 
   if (!product) notFound();
 

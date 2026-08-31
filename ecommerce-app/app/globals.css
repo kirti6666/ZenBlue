@@ -75,6 +75,33 @@ h1, h2, h3, h4, h5, h6 {
   animation-play-state: paused;
 }
 
+@keyframes skeleton-reflection {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+/* A brighter travelling reflection reads as active loading without fading the
+   whole page in and out. Keeping the base opaque also prevents a blank flash
+   when a streamed route hands over to its real content. */
+.skeleton-shimmer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--surface-alt) !important;
+}
+
+.skeleton-shimmer::after {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  content: "";
+  pointer-events: none;
+  transform: translateX(-100%);
+  background: linear-gradient(100deg, transparent 20%, rgba(255, 255, 255, 0.78) 48%, transparent 76%);
+  animation: skeleton-reflection 1.05s ease-in-out infinite;
+}
+
 /* Product cards request their second image only on devices that genuinely
    support hover. This preserves the gallery preview on desktop without making
    touch devices download a hidden second image for every product. */
@@ -151,6 +178,10 @@ input::placeholder, textarea::placeholder {
   }
 
   .announcement-set-duplicate {
+    display: none;
+  }
+
+  .skeleton-shimmer::after {
     display: none;
   }
 }

@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { Search, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { StoreImage } from "./StoreImage";
 
 interface Suggestion {
   _id: string;
@@ -127,12 +128,13 @@ export function SearchBar({ currencySymbol = "₹" }: { currencySymbol?: string 
                       className="flex w-full items-center gap-3 px-3 py-2 text-left hover:bg-surface-alt"
                     >
                       {p.image ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
+                        <StoreImage
                           src={p.image}
                           alt=""
-                          className="h-11 w-11 rounded-md object-cover"
-                          loading="lazy"
+                          width={96}
+                          sizes="44px"
+                          wrapperClassName="h-11 w-11 shrink-0 rounded-md"
+                          className="object-cover"
                         />
                       ) : (
                         <div className="h-11 w-11 rounded-md bg-surface-alt" />

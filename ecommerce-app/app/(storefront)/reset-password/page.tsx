@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, KeyRound } from "lucide-react";
 import { PasswordInput } from "@/components/ui/PasswordInput";
+import { Skeleton } from "@/components/ui/Skeleton";
 
 function ResetPasswordForm() {
   const searchParams = useSearchParams();
@@ -109,10 +110,9 @@ function ResetPasswordForm() {
 export default function ResetPasswordPage() {
   return (
     <main className="flex min-h-[70vh] items-center justify-center px-5 py-10">
-      <Suspense fallback={null}>
+      <Suspense fallback={<div className="w-full max-w-md space-y-4"><Skeleton className="h-8 w-40"/><Skeleton className="h-12 w-full"/><Skeleton className="h-12 w-full"/><Skeleton className="h-12 w-full"/></div>}>
         <ResetPasswordForm />
       </Suspense>
     </main>
   );
 }
-

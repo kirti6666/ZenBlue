@@ -1,7 +1,8 @@
 import Link from "next/link";
+import Image from "next/image";
 import { WishlistButton } from "./WishlistButton";
 import { formatPrice } from "@/lib/site-settings";
-import { cloudinaryUrl, cloudinarySrcSet, IMAGE_SIZES } from "@/lib/image";
+import { cloudinaryPlaceholder, cloudinaryUrl, cloudinarySrcSet, IMAGE_SIZES } from "@/lib/image";
 import { isVideoUrl } from "@/lib/media";
 import { swatchColor } from "@/lib/color-swatches";
 
@@ -60,6 +61,8 @@ export function ProductCard({ product, currency = "₹", priority = false }: Pro
     ? cloudinarySrcSet(secondary, [160, 240, 320, 480, 640], { quality: "auto:eco" }) ??
       cloudinaryUrl(secondary, { width: 480, quality: "auto:eco" })
     : undefined;
+  const primarySource = primary ? cloudinaryUrl(primary, { width: 960, quality: "auto:best" }) : "";
+  const primaryOptimizable = primarySource.startsWith("/") || primarySource.includes("res.cloudinary.com");
   const colors =
     product.variants?.find((variant) => /colou?r/i.test(variant.name))?.options.filter(Boolean) ?? [];
 
@@ -85,16 +88,16 @@ export function ProductCard({ product, currency = "₹", priority = false }: Pro
 
         {primary ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={cloudinaryUrl(primary, { width: 480, quality: priority ? "auto" : "auto:eco" })}
-              srcSet={cloudinarySrcSet(primary, [160, 240, 320, 480, 640], { quality: priority ? "auto" : "auto:eco" })}
+            <Image
+              src={primarySource}
               sizes={IMAGE_SIZES.productCard}
               alt={product.title}
-              loading={priority ? "eager" : "lazy"}
-              // fetchPriority high on the first row helps the listing's LCP.
-              fetchPriority={priority ? "high" : "low"}
-              decoding="async"
+              fill
+              priority={priority}
+              quality={priority ? 80 : 72}
+              unoptimized={!primaryOptimizable}
+              placeholder={primary.includes("res.cloudinary.com") ? "blur" : "empty"}
+              blurDataURL={primary.includes("res.cloudinary.com") ? cloudinaryPlaceholder(primary) : undefined}
               className={`product-card-primary h-full w-full object-cover ${
                 secondary ? "product-card-primary--swap" : ""
               } ${soldOut ? "opacity-60" : ""}`}
