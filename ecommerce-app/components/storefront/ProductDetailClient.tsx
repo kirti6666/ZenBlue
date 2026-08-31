@@ -62,13 +62,11 @@ export function ProductDetailClient({
   sizeChart,
   estimatedDelivery,
   returnPolicy,
-  freeShippingThreshold,
 }: {
   product: Product;
   sizeChart?: SizeChart | null;
   estimatedDelivery: string;
   returnPolicy: string;
-  freeShippingThreshold: number;
 }) {
   const router = useRouter();
   const addItem = useCartStore((s) => s.addItem);
@@ -361,8 +359,7 @@ export function ProductDetailClient({
         <ul className="mt-5 space-y-2 border-t border-line pt-4 text-xs text-body sm:mt-6 sm:space-y-2.5 sm:pt-5 sm:text-sm">
           <li className="flex items-center justify-start gap-2.5">
             <Truck size={15} className="shrink-0 text-muted" />
-            {estimatedDelivery} · free over {currency}
-            {freeShippingThreshold}
+            {estimatedDelivery} · Free shipping on all orders
           </li>
           <li className="flex items-center justify-start gap-2.5">
             <RotateCcw size={15} className="shrink-0 text-muted" />

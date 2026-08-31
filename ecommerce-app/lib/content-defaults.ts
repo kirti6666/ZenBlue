@@ -68,7 +68,7 @@ We are committed to building ZEN BLUE with consistency and intention. Every coll
     subtitle: "How orders are processed, dispatched and delivered.",
     metaTitle: "Shipping Policy — ZEN BLUE",
     metaDescription:
-      "Order processing, dispatch, delivery timelines, shipping charges and tracking information for ZEN BLUE orders.",
+      "Order processing, free delivery timelines and tracking information for ZEN BLUE orders.",
     isSystem: true,
     body: `At ZEN BLUE, we aim to make every order experience simple, reliable and transparent. This policy explains how orders are processed, dispatched and delivered.
 
@@ -80,9 +80,9 @@ Orders are processed after successful payment and order confirmation. Orders are
 
 Once dispatched, your order is handed to a shipping carrier. Delivery timelines may vary based on destination, courier service, weather, public holidays and circumstances beyond our control.
 
-## 3. Shipping charges
+## 3. Free shipping
 
-Applicable shipping charges are shown at checkout before you place your order. ZEN BLUE may offer free-shipping promotions subject to the terms of the applicable offer.
+ZEN BLUE provides free standard shipping on every website order. No minimum order value is required, and checkout will show the shipping charge as Free.
 
 ## 4. Order tracking
 

@@ -11,6 +11,11 @@ import { RETURN_WINDOW_POLICY_PARAGRAPH } from "@/lib/return-policy";
 
 export const dynamic = "force-dynamic";
 
+const LEGACY_SHIPPING_COPY =
+  "Applicable shipping charges are shown at checkout before you place your order. ZEN BLUE may offer free-shipping promotions subject to the terms of the applicable offer.";
+const FREE_SHIPPING_COPY =
+  "ZEN BLUE provides free standard shipping on every website order. No minimum order value is required, and checkout will show the shipping charge as Free.";
+
 /**
  * Generic CMS page — Shipping Policy, Return & Exchange, Privacy, Terms, and
  * anything else the client adds later at /admin/content.
@@ -28,6 +33,15 @@ async function loadPage(slug: string) {
       const legacy =
         "Requests must be raised within the return or exchange period displayed on the product page or at the time of purchase. Requests submitted after the applicable period may not be accepted.";
       const body = String(page.body ?? "").replace(legacy, RETURN_WINDOW_POLICY_PARAGRAPH);
+      if (body !== page.body) {
+        await ContentPage.updateOne({ _id: page._id, body: page.body }, { $set: { body } });
+        page.body = body;
+      }
+    }
+    if (slug === "shipping-policy") {
+      const body = String(page.body ?? "")
+        .replace("## 3. Shipping charges", "## 3. Free shipping")
+        .replace(LEGACY_SHIPPING_COPY, FREE_SHIPPING_COPY);
       if (body !== page.body) {
         await ContentPage.updateOne({ _id: page._id, body: page.body }, { $set: { body } });
         page.body = body;

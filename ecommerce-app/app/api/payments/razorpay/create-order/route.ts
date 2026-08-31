@@ -197,10 +197,8 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const shippingFee =
-      subtotal - discount >= settings.commerce.freeShippingThreshold
-        ? 0
-        : settings.commerce.shippingFee;
+    // ZenBlue ships every website order free.
+    const shippingFee = 0;
 
     const payableBeforeCredit = Math.max(0, subtotal - discount + shippingFee);
 

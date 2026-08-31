@@ -59,8 +59,8 @@ export default function CheckoutPage() {
   const [storeName, setStoreName] = useState("ZenBlue");
   const [commerce, setCommerce] = useState({
     currencySymbol: "₹",
-    shippingFee: 49,
-    freeShippingThreshold: 999,
+    shippingFee: 0,
+    freeShippingThreshold: 0,
     codEnabled: true,
     razorpayEnabled: true,
   });
@@ -156,8 +156,7 @@ export default function CheckoutPage() {
 
   const cur = commerce.currencySymbol;
   const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-  const shippingFee =
-    subtotal - discount >= commerce.freeShippingThreshold ? 0 : commerce.shippingFee;
+  const shippingFee = 0;
   const payableBeforeCredit = Math.max(0, subtotal - discount + shippingFee);
 
   // Paying online needs at least ₹1 left on the gateway — a zero-rupee Razorpay

@@ -243,14 +243,14 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
   commerce: {
     currencySymbol: "₹",
     currencyCode: "INR",
-    shippingFee: 79,
-    freeShippingThreshold: 1499,
+    shippingFee: 0,
+    freeShippingThreshold: 0,
     codEnabled: true,
     razorpayEnabled: true,
   },
   announcement: {
     enabled: true,
-    text: "Free shipping for all orders",
+    text: "Free shipping on all orders",
     link: "/shop",
   },
   home: {
@@ -283,7 +283,7 @@ export const DEFAULT_SETTINGS: SiteSettingsData = {
     showNewArrivals: true,
     showBestSellers: true,
     highlights: [
-      { icon: "Package", title: "Free shipping", subtitle: "On orders above ₹1,499" },
+      { icon: "Package", title: "Free shipping", subtitle: "On every order" },
       { icon: "RotateCcw", title: "Easy returns", subtitle: "Hassle free returns" },
       { icon: "ShieldCheck", title: "Secure payments", subtitle: "100% secure & trusted" },
       { icon: "Headphones", title: "Customer support", subtitle: "We are here to help you" },
@@ -594,6 +594,23 @@ async function readSiteSettings(): Promise<SiteSettingsData> {
       settings.announcement.text = DEFAULT_SETTINGS.announcement.text;
       await SiteSettings.updateOne(
         { singletonKey: "site", "announcement.text": previousAnnouncement },
+        { $set: { "announcement.text": DEFAULT_SETTINGS.announcement.text } }
+      );
+    }
+    // Shipping is free store-wide. Normalize legacy threshold/fee settings so
+    // the public settings API and admin screen cannot suggest otherwise.
+    if (settings.commerce.shippingFee !== 0 || settings.commerce.freeShippingThreshold !== 0) {
+      settings.commerce.shippingFee = 0;
+      settings.commerce.freeShippingThreshold = 0;
+      await SiteSettings.updateOne(
+        { singletonKey: "site" },
+        { $set: { "commerce.shippingFee": 0, "commerce.freeShippingThreshold": 0 } }
+      );
+    }
+    if (/over\s*₹?\s*[\d,]+/i.test(settings.announcement.text)) {
+      settings.announcement.text = DEFAULT_SETTINGS.announcement.text;
+      await SiteSettings.updateOne(
+        { singletonKey: "site" },
         { $set: { "announcement.text": DEFAULT_SETTINGS.announcement.text } }
       );
     }

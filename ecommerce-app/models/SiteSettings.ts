@@ -285,8 +285,8 @@ const CommerceSchema = new Schema(
   {
     currencySymbol: { type: String, default: "₹" },
     currencyCode: { type: String, default: "INR" },
-    shippingFee: { type: Number, default: 49 },
-    freeShippingThreshold: { type: Number, default: 999 },
+    shippingFee: { type: Number, default: 0 },
+    freeShippingThreshold: { type: Number, default: 0 },
     codEnabled: { type: Boolean, default: true },
     razorpayEnabled: { type: Boolean, default: true },
   },

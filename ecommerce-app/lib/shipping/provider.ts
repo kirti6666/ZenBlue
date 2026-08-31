@@ -106,13 +106,12 @@ class ManualProvider implements ShippingProvider {
   }
 
   async getRates(req: RateRequest): Promise<RateOption[]> {
-    const { commerce, shipping } = this.settings;
-    const free = req.declaredValue >= commerce.freeShippingThreshold;
+    const { shipping } = this.settings;
     return [
       {
         courierId: "manual",
         courierName: "Standard delivery",
-        rate: free ? 0 : commerce.shippingFee + (req.cod ? shipping.codExtraFee : 0),
+        rate: 0,
         estimatedDays: 5,
         codAvailable: shipping.codEnabled,
       },

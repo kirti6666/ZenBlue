@@ -143,7 +143,6 @@ export default async function ProductPage({ params }: { params: { slug: string }
         sizeChart={sizeChart}
         estimatedDelivery={settings.shipping.estimatedDeliveryDays}
         returnPolicy={settings.returns.policySummary}
-        freeShippingThreshold={settings.commerce.freeShippingThreshold}
       />
 
       <ProductReviews productId={String(product._id)} />

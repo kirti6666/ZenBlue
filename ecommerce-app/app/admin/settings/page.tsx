@@ -568,18 +568,11 @@ export default function AdminSettingsPage() {
               onChange={(v) => set("commerce.currencyCode", v)}
             />
           </div>
-          <div className="grid grid-cols-2 gap-4">
-            <NumberField
-              label="Shipping fee"
-              value={s.commerce.shippingFee}
-              onChange={(v) => set("commerce.shippingFee", v)}
-            />
-            <NumberField
-              label="Free shipping over"
-              value={s.commerce.freeShippingThreshold}
-              onChange={(v) => set("commerce.freeShippingThreshold", v)}
-              hint="Orders at/above this subtotal ship free."
-            />
+          <div className="rounded-lg border border-line bg-surface-muted p-4">
+            <p className="text-sm font-medium text-heading">Free shipping is enabled</p>
+            <p className="mt-1 text-xs text-muted">
+              Every website order ships free with no minimum order value.
+            </p>
           </div>
           <Toggle
             label="Cash on Delivery"

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getSiteSettings } from "@/lib/site-settings";
 
 const ANNOUNCEMENTS = [
-  { text: "Free shipping for all orders", href: "/shop" },
+  { text: "Free shipping on all orders", href: "/shop" },
   { text: "Limited stock on selected styles", href: "/shop" },
   { text: "Bulk orders for teams & businesses", href: "/bulk-orders" },
   { text: "Customize your shirts & T-shirts", href: "/customization" },
